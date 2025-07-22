@@ -1,0 +1,689 @@
+import React, { useState, useCallback } from "react";
+import { getProducts, createNotificationRequest } from "@/api/services";
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  SafeAreaView,
+  RefreshControl,
+} from "react-native";
+import { router, useFocusEffect } from "expo-router";
+import { Ionicons, FontAwesome6 } from "@expo/vector-icons";
+
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useSelector } from "react-redux";
+import MultiSlider from "@ptomasroos/react-native-multi-slider";
+
+import useFetch from "@/hooks/useFetch";
+import { RootState } from "@/store";
+import ProductCard from "@/app/components/ProductCard";
+
+import Input from "@/app/components/ui/Input";
+import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
+
+export default function Home() {
+  const [searchText, setSearchText] = useState("");
+  const [filters, setFilters] = useState({ min: 0, max: 50 });
+  const [priceModalVisible, setPriceModalVisible] = useState(false);
+  const [requestModalVisible, setRequestModalVisible] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [inputQty, setInputQty] = useState("");
+  const [unit, setUnit] = useState<"kg" | "g">("kg");
+  const [userId, setUserId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const {
+    data: response,
+    loading,
+    error,
+    refetch,
+  } = useFetch(() => getProducts(0, 50, filters.min, filters.max));
+
+  const notifications = useSelector(
+    (state: RootState) => state.notifications.notifications.length
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchUserId = async () => {
+        const id = await AsyncStorage.getItem("userId");
+        setUserId(id);
+      };
+      fetchUserId();
+      refetch();
+    }, [filters])
+  );
+
+  const products = (response?.response || []).filter(
+    (product) => product.remainingQuantityKg > 0 && product.userId !== userId
+  );
+
+  const filteredProducts = products.filter(
+    (product) =>
+      product.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      product.description.toLowerCase().includes(searchText.toLowerCase())
+  );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  }, [refetch]);
+
+  const openRequestModal = (product: any) => {
+    setSelectedProduct(product);
+    setInputQty("");
+    setUnit("kg");
+    setRequestModalVisible(true);
+  };
+
+  const handleChatPress = (product: any) => {
+    router.push({
+      pathname: "/(root)/chat/[receiverId]",
+      params: {
+        receiverId: product.userId,
+        productId: product.id,
+        receiverName: product.seller?.name || "User",
+      },
+    });
+  };
+
+  const confirmRequest = async () => {
+    if (!inputQty || !selectedProduct) return;
+
+    let qtyGrams = parseFloat(inputQty);
+    if (unit === "kg") qtyGrams *= 1000;
+
+    if (qtyGrams > selectedProduct.remainingQuantityKg * 1000) {
+      alert("Not enough stock available");
+      return;
+    }
+
+    try {
+      const buyerId = await AsyncStorage.getItem("userId");
+      const sellerId = selectedProduct?.userId;
+
+      if (!buyerId || !sellerId) {
+        alert("User or Seller info missing.");
+        return;
+      }
+
+      await createNotificationRequest({
+        buyerId,
+        sellerId,
+        productId: selectedProduct.id,
+        desiredQuantity: qtyGrams / 1000,
+        desiredPricePerKg: selectedProduct.pricePerKg,
+        requestStatus: "PENDING",
+        sendAt: new Date().toISOString(),
+      });
+
+      alert("Request sent successfully");
+      setRequestModalVisible(false);
+    } catch (err) {
+      console.error("Notification request failed:", err);
+      alert("Failed to send request.");
+    }
+  };
+
+  const renderHeader = () => (
+    <View style={[styles.header, { backgroundColor: "#8B5CF6" }]}>
+      <SafeAreaView>
+        <View style={styles.headerContent}>
+          <View>
+            <Text style={styles.greeting}>{getGreeting()}</Text>
+            <Text style={styles.subtitle}>Find fresh seeds for your farm</Text>
+          </View>
+
+          <View style={styles.headerActions}>
+            {/* Notification Bell */}
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => router.push("/(root)/profile/notifications")}
+            >
+              <Ionicons
+                name="notifications-outline"
+                size={32} // Increased from 24 to 28
+                color="#FFFFFF"
+              />
+              {notifications > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {notifications > 99 ? "99+" : notifications}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            {/* Wishlist Button */}
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => router.push("/(root)/profile/wishtlist")}
+            >
+              <FontAwesome6 name="heart" size={30} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
+    </View>
+  );
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    const userName = "Farmer";
+
+    if (hour < 12) {
+      return `Good morning, ${userName} ! `;
+    } else if (hour < 17) {
+      return `Good afternoon, ${userName} ! `;
+    } else {
+      return `Good evening, ${userName} ! `;
+    }
+  };
+
+  const renderSearchAndFilters = () => (
+    <View style={styles.searchContainer}>
+      <Input
+        placeholder="Search products..."
+        value={searchText}
+        onChangeText={setSearchText}
+        leftIcon="search-outline"
+        containerStyle={styles.searchInput}
+      />
+
+      <TouchableOpacity
+        onPress={() => setPriceModalVisible(true)}
+        style={styles.filterButton}
+      >
+        <Ionicons name="options-outline" size={20} color="#8B5CF6" />
+      </TouchableOpacity>
+    </View>
+  );
+
+  if (loading && !refreshing) {
+    return (
+      <View style={styles.loadingContainer}>
+        <LoadingSpinner size="lg" />
+        <Text style={styles.loadingText}>Loading products...</Text>
+      </View>
+    );
+  }
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
+         ̰
+        <Text style={styles.errorText}>Failed to load products</Text>
+        {/* <Button title="Retry" onPress={refetch} /> */}
+        <TouchableOpacity style={styles.retryButton} onPress={refetch}>
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={filteredProducts}
+        keyExtractor={(item) => item.id.toString()}
+        ListHeaderComponent={
+          <>
+            {renderHeader()}
+            {renderSearchAndFilters()}
+          </>
+        }
+        renderItem={({ item, index }) => (
+          <ProductCard
+            product={item}
+            delay={index * 0.1}
+            onPress={() => router.push(`/(root)/product/${item.id}`)}
+            onChatPress={() => handleChatPress(item)}
+            onRequestPress={() => openRequestModal(item)}
+            isOwner={item.userId === userId}
+          />
+        )}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyCard}>
+            <View>
+              <Ionicons name="leaf-outline" size={48} color="#9CA3AF" />
+              <Text style={styles.emptyTitle}>No products found</Text>
+              <Text style={styles.emptySubtitle}>
+                Try adjusting your search or filters
+              </Text>
+            </View>
+          </View>
+        }
+      />
+
+      {/* Price Filter Modal */}
+      <Modal
+        visible={priceModalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setPriceModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Filter by Price</Text>
+              <TouchableOpacity
+                onPress={() => setPriceModalVisible(false)}
+                style={styles.closeButton}
+              >
+                <Ionicons name="close" size={24} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.sliderLabel}>
+              Price Range: ₹{filters.min} - ₹{filters.max}
+            </Text>
+
+            <MultiSlider
+              values={[filters.min, filters.max]}
+              min={0}
+              max={1000}
+              step={10}
+              onValuesChangeFinish={(values) =>
+                setFilters({ min: values[0], max: values[1] })
+              }
+              selectedStyle={{ backgroundColor: "#8B5CF6" }}
+              unselectedStyle={{ backgroundColor: "#E5E7EB" }}
+              containerStyle={{ height: 40 }}
+              trackStyle={{ height: 4, borderRadius: 2 }}
+              markerStyle={{
+                backgroundColor: "#8B5CF6",
+                height: 20,
+                width: 20,
+                borderRadius: 10,
+              }}
+            />
+
+            <TouchableOpacity
+              style={styles.applyButton}
+              onPress={() => {
+                setPriceModalVisible(true);
+                refetch();
+              }}
+            >
+              <Text style={styles.applyButtonText}>Apply Filter</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Request Modal */}
+      <Modal
+        visible={requestModalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setRequestModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Request Product</Text>
+              <TouchableOpacity
+                onPress={() => setRequestModalVisible(false)}
+                style={styles.closeButton}
+              >
+                <Ionicons name="close" size={24} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+
+            {selectedProduct && (
+              <>
+                <Text style={styles.productName}>{selectedProduct.name}</Text>
+                <Text style={styles.productPrice}>
+                  ₹{selectedProduct.pricePerKg}/kg
+                </Text>
+
+                <View style={styles.quantityContainer}>
+                  <Input
+                    label="Quantity"
+                    placeholder={`Enter quantity in ${unit}`}
+                    keyboardType="numeric"
+                    value={inputQty}
+                    onChangeText={setInputQty}
+                    containerStyle={styles.quantityInput}
+                  />
+
+                  <View style={styles.unitButtons}>
+                    <TouchableOpacity
+                      style={[
+                        styles.unitButton,
+                        unit === "kg" && styles.unitButtonActive,
+                      ]}
+                      onPress={() => setUnit("kg")}
+                    >
+                      <Text
+                        style={[
+                          styles.unitButtonText,
+                          unit === "kg" && styles.unitButtonTextActive,
+                        ]}
+                      >
+                        Kg
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.unitButton,
+                        unit === "g" && styles.unitButtonActive,
+                      ]}
+                      onPress={() => setUnit("g")}
+                    >
+                      <Text
+                        style={[
+                          styles.unitButtonText,
+                          unit === "g" && styles.unitButtonTextActive,
+                        ]}
+                      >
+                        Grams
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {inputQty && (
+                  <View style={styles.totalContainer}>
+                    <Text style={styles.totalLabel}>Total Amount:</Text>
+                    <Text style={styles.totalAmount}>
+                      ₹
+                      {(
+                        (unit === "kg"
+                          ? parseFloat(inputQty)
+                          : parseFloat(inputQty) / 1000) *
+                        selectedProduct.pricePerKg
+                      ).toFixed(2)}
+                    </Text>
+                  </View>
+                )}
+
+                <TouchableOpacity
+                  style={styles.requestSubmitButton}
+                  onPress={confirmRequest}
+                >
+                  <Text style={styles.requestSubmitButtonText}>
+                    Send Request
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F9FAFB",
+  },
+  header: {
+    paddingBottom: 20,
+  },
+  headerContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 10,
+  },
+  greeting: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#E0E7FF",
+    marginTop: 4,
+  },
+
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    flexWrap: "wrap", // allow wrap on smaller screens
+    maxWidth: 160,
+  },
+  iconButton: {
+    position: "relative",
+  },
+
+  badge: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    backgroundColor: "#EF4444",
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    minWidth: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  badgeText: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontWeight: "bold",
+  },
+
+  searchContainer: {
+    flexDirection: "row",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    alignItems: "center",
+    gap: 12,
+  },
+  searchInput: {
+    flex: 1,
+    marginVertical: 0,
+  },
+  filterButton: {
+    backgroundColor: "#FFFFFF",
+    padding: 12,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  listContent: {
+    paddingBottom: 100,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F9FAFB",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#6B7280",
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F9FAFB",
+    paddingHorizontal: 20,
+  },
+  errorText: {
+    fontSize: 18,
+    color: "#EF4444",
+    marginVertical: 16,
+    textAlign: "center",
+  },
+  emptyCard: {
+    alignItems: "center",
+    paddingVertical: 40,
+    marginHorizontal: 20,
+    marginTop: 40,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#374151",
+    marginTop: 16,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: "#6B7280",
+    marginTop: 8,
+    textAlign: "center",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  modalContent: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 24,
+    width: "100%",
+    maxWidth: 400,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  closeButton: {
+    padding: 4,
+  },
+  sliderLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#374151",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  applyButton: {
+    marginTop: 20,
+  },
+  productName: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 8,
+  },
+  productPrice: {
+    fontSize: 16,
+    color: "#8B5CF6",
+    fontWeight: "600",
+    marginBottom: 20,
+  },
+  quantityContainer: {
+    marginBottom: 20,
+  },
+  quantityInput: {
+    marginBottom: 12,
+  },
+  unitButtons: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  unitButton: {
+    flex: 1,
+    backgroundColor: "#F3F4F6",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  unitButtonActive: {
+    backgroundColor: "#8B5CF6",
+    borderColor: "#8B5CF6",
+  },
+  unitButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#6B7280",
+  },
+  unitButtonTextActive: {
+    color: "#FFFFFF",
+  },
+  totalContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#F3F4F6",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  totalLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#374151",
+  },
+  totalAmount: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#8B5CF6",
+  },
+  requestSubmitButton: {
+    marginTop: 8,
+  },
+  applyButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center",
+    backgroundColor: "#8B5CF6",
+    paddingVertical: 12,
+    width: "50%",
+    marginLeft: "25%",
+    borderRadius: 12,
+  },
+  requestSubmitButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center",
+    backgroundColor: "#8B5CF6",
+    paddingVertical: 12,
+    width: "50%",
+    marginLeft: "25%",
+    borderRadius: 12,
+  },
+  retryButton: {
+    backgroundColor: "#ff3b30",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 6,
+    alignSelf: "center",
+    marginTop: 16,
+  },
+
+  retryButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+});
