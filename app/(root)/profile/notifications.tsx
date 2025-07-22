@@ -11,13 +11,20 @@ import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
+import { 
+  markAllAsRead, 
+  setLastReadTimestamp, 
+  clearNotification 
+} from "@/store/notificationSlice";
+import { clearBadge } from "@/store/badgeSlice";
 import moment from "moment";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Notification } from "@/api/types";
 import { markNotificationCleared } from "@/api/services";
-import { clearNotification } from "@/store/notificationSlice";
+import { useDarkMode } from "@/app/context/DarkModeContext";
 
 export default function NotificationsScreen() {
+  const { colors } = useDarkMode();
   const notifications = useSelector(
     (state: RootState) => state.notifications.notifications
   );
@@ -33,6 +40,15 @@ export default function NotificationsScreen() {
     });
   }, []);
   const dispatch = useDispatch();
+
+  // Clear badge and mark notifications as read when screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(clearBadge('notifications'));
+      dispatch(markAllAsRead());
+      dispatch(setLastReadTimestamp(new Date().toISOString()));
+    }, [dispatch])
+  );
 
   const handleClearNotification = async (id: number) => {
     try {
@@ -74,12 +90,14 @@ export default function NotificationsScreen() {
   });
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.headerBackground }]}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#333" />
+          <Ionicons name="arrow-back" size={24} color={colors.headerText} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Notifications</Text>
+        <Text style={[styles.headerTitle, { color: colors.headerText }]}>
+          Notifications
+        </Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -133,7 +151,7 @@ export default function NotificationsScreen() {
             }
 
             return (
-              <View style={styles.card}>
+              <View style={[styles.card, { backgroundColor: colors.surface }]}>
                 <View style={styles.row}>
                   <MaterialIcons
                     name={iconName}
@@ -142,20 +160,24 @@ export default function NotificationsScreen() {
                     style={{ marginRight: 12 }}
                   />
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.title}>{message}</Text>
-                    <Text style={styles.detail}>
+                    <Text style={[styles.title, { color: colors.text }]}>
+                      {message}
+                    </Text>
+                    <Text style={[styles.detail, { color: colors.textSecondary }]}>
                       Quantity: {r?.desiredQuantity} kg
                     </Text>
-                    <Text style={styles.detail}>
+                    <Text style={[styles.detail, { color: colors.textSecondary }]}>
                       Price: ₹{r?.desiredPricePerKg} /kg
                     </Text>
-                    <Text style={styles.time}>{formatted}</Text>
+                    <Text style={[styles.time, { color: colors.textSecondary }]}>
+                      {formatted}
+                    </Text>
                   </View>
                   <TouchableOpacity
                     onPress={() => handleClearNotification(item.id)}
                     style={styles.closeIcon}
                   >
-                    <Ionicons name="close" size={20} color="#888" />
+                    <Ionicons name="close" size={20} color={colors.textSecondary} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -164,7 +186,7 @@ export default function NotificationsScreen() {
         />
       ) : (
         <View style={styles.center}>
-          <Text>No notifications found.</Text>
+          <Text style={{ color: colors.text }}>No notifications found.</Text>
         </View>
       )}
     </View>
@@ -172,26 +194,32 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 12, backgroundColor: "#fff" },
+  container: { flex: 1, padding: 12 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
   },
-  headerTitle: { fontSize: 20, fontWeight: "bold", color: "#333" },
+  headerTitle: { fontSize: 20, fontWeight: "bold" },
   card: {
-    backgroundColor: "#f9f9f9",
     padding: 14,
     borderRadius: 10,
     marginBottom: 12,
     elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   row: { flexDirection: "row", alignItems: "center" },
-  title: { fontSize: 16, fontWeight: "600", color: "#333" },
-  time: { fontSize: 12, color: "#777", marginTop: 4 },
-  detail: { fontSize: 12, color: "#555", marginTop: 2 },
+  title: { fontSize: 16, fontWeight: "600" },
+  time: { fontSize: 12, marginTop: 4 },
+  detail: { fontSize: 12, marginTop: 2 },
   closeIcon: {
     marginLeft: 12,
     padding: 6,

@@ -16,10 +16,12 @@ import { getMyProducts, deleteProduct } from "@/api/services";
 import useFetch from "@/hooks/useFetch";
 import CreateProduct from "@/app/components/CreateProduct";
 import { useRouter } from "expo-router"; // ✅ Import router
+import { useDarkMode } from "@/app/context/DarkModeContext";
 
 import Constants from "expo-constants";
 const BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl;
 export default function Products() {
+  const { colors } = useDarkMode();
   const { data: response, loading, error, refetch } = useFetch(getMyProducts);
   const products = response?.response || [];
 
@@ -59,16 +61,18 @@ export default function Products() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.headerBackground }]}>
         <View>
-          <Text style={styles.title}>My Products</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: colors.headerText }]}>
+            My Products
+          </Text>
+          <Text style={[styles.subtitle, { color: `${colors.headerText}CC` }]}>
             {products.length} product{products.length !== 1 ? "s" : ""} listed
           </Text>
         </View>
         <TouchableOpacity
-          style={styles.addButton}
+          style={[styles.addButton, { backgroundColor: colors.primary }]}
           onPress={() => {
             setEditProduct(null);
             setShowModal(true);
@@ -77,31 +81,35 @@ export default function Products() {
           <Ionicons
             name="add"
             size={24}
-            color="#10B981"
+            color={colors.surface}
             style={styles.addButtonText}
           />
         </TouchableOpacity>
       </View>
 
       {loading ? (
-        <View style={styles.center}>
+        <View style={[styles.center, { backgroundColor: colors.background }]}>
           <ActivityIndicator size="large" color="#2563eb" />
         </View>
       ) : products.length === 0 ? (
         <View style={styles.empty}>
           <Ionicons name="leaf-outline" size={48} color="#9CA3AF" />
-          <Text style={styles.emptyText}>No products yet</Text>
-          <Text style={styles.emptySub}>
+          <Text style={[styles.emptyText, { color: colors.text }]}>
+            No products yet
+          </Text>
+          <Text style={[styles.emptySub, { color: colors.textSecondary }]}>
             Add your first product to start selling
           </Text>
           <TouchableOpacity
-            style={styles.addButton}
+            style={[styles.addButton, { backgroundColor: colors.primary }]}
             onPress={() => {
               setEditProduct(null);
               setShowModal(true);
             }}
           >
-            <Text style={styles.addButtonText}>Add Product</Text>
+            <Text style={[styles.addButtonText, { color: colors.surface }]}>
+              Add Product
+            </Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -114,7 +122,7 @@ export default function Products() {
           }
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={styles.card}
+              style={[styles.card, { backgroundColor: colors.surface }]}
               activeOpacity={0.9}
               onPress={() => router.push(`/product/${item.id}`)}
             >
@@ -137,15 +145,17 @@ export default function Products() {
 
               {/* Content section */}
               <View style={styles.cardContent}>
-                <Text style={styles.cardTitle} numberOfLines={2}>
+                <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={2}>
                   {item.name}
                 </Text>
-                <Text style={styles.cardDesc} numberOfLines={2}>
+                <Text style={[styles.cardDesc, { color: colors.textSecondary }]} numberOfLines={2}>
                   {item.description}
                 </Text>
 
                 <View style={styles.priceContainer}>
-                  <Text style={styles.cardPrice}>₹ {item.pricePerKg} /kg</Text>
+                  <Text style={[styles.cardPrice, { color: colors.primary }]}>
+                    ₹ {item.pricePerKg} /kg
+                  </Text>
                 </View>
 
                 <View style={styles.statusContainer}>
@@ -185,8 +195,10 @@ export default function Products() {
                     setShowModal(true);
                   }}
                 >
-                  <Ionicons name="create-outline" size={24} color="#2563eb" />
-                  <Text style={{ paddingBottom: 25 }}>Edit</Text>
+                  <Ionicons name="create-outline" size={24} color={colors.primary} />
+                  <Text style={[{ paddingBottom: 25 }, { color: colors.text }]}>
+                    Edit
+                  </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -211,23 +223,21 @@ export default function Products() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f9fafb" },
+  container: { flex: 1 },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 16,
-    backgroundColor: "#10B981", //
   },
-  title: { fontSize: 22, fontWeight: "bold", color: "#fff" },
-  subtitle: { color: "#fff", fontSize: 14 },
+  title: { fontSize: 22, fontWeight: "bold" },
+  subtitle: { fontSize: 14 },
   addButton: {
-    backgroundColor: "#2563eb",
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 6,
   },
-  addButtonText: { color: "white", fontWeight: "600" },
+  addButtonText: { fontWeight: "600" },
   empty: {
     alignItems: "center",
     paddingVertical: 40,
@@ -238,19 +248,16 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#374151",
     marginTop: 16,
   },
   emptySub: {
     fontSize: 14,
-    color: "#6B7280",
     marginTop: 8,
     textAlign: "center",
   },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   card: {
     flexDirection: "row",
-    backgroundColor: "white",
     marginHorizontal: 16,
     marginVertical: 8,
     padding: 12,
@@ -265,16 +272,15 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
     marginBottom: 4,
   },
-  cardDesc: { fontSize: 14, color: "#6B7280", marginBottom: 8 },
+  cardDesc: { fontSize: 14, marginBottom: 8 },
   priceContainer: {
     flexDirection: "row",
     alignItems: "baseline",
     marginBottom: 8,
   },
-  cardPrice: { fontSize: 18, fontWeight: "700", color: "#10B981" },
+  cardPrice: { fontSize: 18, fontWeight: "700" },
   cardStock: { color: "#6B21A8" },
   imageContainer: { position: "relative" },
   productImage: {

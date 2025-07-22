@@ -18,8 +18,15 @@ import {
 import { useApi } from "@/hooks/useApi";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 import { router } from "expo-router";
+import { useDispatch } from "react-redux";
+import { clearBadge } from "@/store/badgeSlice";
+import { useFocusEffect } from "expo-router";
+import { useCallback } from "react";
+import { useDarkMode } from "@/app/context/DarkModeContext";
 
 export default function SalesScreen() {
+  const { colors } = useDarkMode();
+  const dispatch = useDispatch();
   const { response, loading, error, refetch } = useApi(
     getReceivedNotifications,
     { immediate: true }
@@ -35,6 +42,14 @@ export default function SalesScreen() {
     await refetch();
     setRefreshing(false);
   }, [refetch]);
+
+  // Clear sales badge when screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(clearBadge('sales'));
+    }, [dispatch])
+  );
+
   const handleViewSalesDetails = (item: any) => {
     router.push({
       pathname: "/(root)/profile/SalesDetails",
@@ -76,12 +91,14 @@ export default function SalesScreen() {
     });
   };
   const renderHeader = () => (
-    <View style={styles.header}>
+    <View style={[styles.header, { backgroundColor: colors.headerBackground }]}>
       <SafeAreaView>
         <View style={styles.headerContent}>
           <View>
-            <Text style={styles.headerTitle}>Sales Requests</Text>
-            <Text style={styles.headerSubtitle}>
+            <Text style={[styles.headerTitle, { color: colors.headerText }]}>
+              Sales Requests
+            </Text>
+            <Text style={[styles.headerSubtitle, { color: `${colors.headerText}CC` }]}>
               {pendingRequests.length} pending request
               {pendingRequests.length !== 1 ? "s" : ""}
             </Text>
@@ -89,10 +106,12 @@ export default function SalesScreen() {
 
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>
+              <Text style={[styles.statNumber, { color: colors.headerText }]}>
                 {receivedNotifications.length}
               </Text>
-              <Text style={styles.statLabel}>Total</Text>
+              <Text style={[styles.statLabel, { color: `${colors.headerText}CC` }]}>
+                Total
+              </Text>
             </View>
           </View>
         </View>
@@ -111,13 +130,13 @@ export default function SalesScreen() {
         onPress={() => handleViewSalesDetails(item)}
         activeOpacity={0.9}
       >
-        <View style={styles.requestCard}>
+        <View style={[styles.requestCard, { backgroundColor: colors.surface }]}>
           <View style={styles.requestHeader}>
             <View style={styles.productInfo}>
-              <Text style={styles.productName}>
+              <Text style={[styles.productName, { color: colors.text }]}>
                 {item.productName || `Product #${item.productId}`}
               </Text>
-              <Text style={styles.buyerName}>
+              <Text style={[styles.buyerName, { color: colors.textSecondary }]}>
                 Request from {item.buyerName || "Unknown Buyer"}
               </Text>
             </View>
@@ -151,24 +170,34 @@ export default function SalesScreen() {
             <View style={styles.detailRow}>
               <View style={styles.detailItem}>
                 <Ionicons name="scale-outline" size={16} color="#6B7280" />
-                <Text style={styles.detailLabel}>Quantity</Text>
-                <Text style={styles.detailValue}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
+                  Quantity
+                </Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>
+                  {item.desiredQuantity} kg
+                </Text>
                   {item.desiredQuantity} kg
                 </Text>
               </View>
 
               <View style={styles.detailItem}>
                 <Ionicons name="cash-outline" size={16} color="#6B7280" />
-                <Text style={styles.detailLabel}>Price</Text>
-                <Text style={styles.detailValue}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
+                  Price
+                </Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>
                   ₹{item.desiredPricePerKg}/kg
                 </Text>
               </View>
             </View>
 
             <View style={styles.totalContainer}>
-              <Text style={styles.totalLabel}>Total Amount:</Text>
-              <Text style={styles.totalAmount}>₹{totalAmount}</Text>
+              <Text style={[styles.totalLabel, { color: colors.text }]}>
+                Total Amount:
+              </Text>
+              <Text style={[styles.totalAmount, { color: colors.primary }]}>
+                ₹{totalAmount}
+              </Text>
             </View>
           </View>
 
@@ -239,18 +268,22 @@ export default function SalesScreen() {
 
   if (loading && !refreshing) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <LoadingSpinner size="lg" />
-        <Text style={styles.loadingText}>Loading sales requests...</Text>
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+          Loading sales requests...
+        </Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.errorContainer}>
+      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
         <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
-        <Text style={styles.errorText}>Failed to load requests</Text>
+        <Text style={[styles.errorText, { color: colors.text }]}>
+          Failed to load requests
+        </Text>
         {/* <Button title="Retry" onPress={refetch} /> */}
         <TouchableOpacity
           onPress={refetch}
@@ -265,7 +298,7 @@ export default function SalesScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
         data={receivedNotifications}
         keyExtractor={(item) => item.id.toString()}
@@ -279,8 +312,10 @@ export default function SalesScreen() {
         ListEmptyComponent={
           <View style={styles.emptyCard}>
             <Ionicons name="receipt-outline" size={48} color="#9CA3AF" />
-            <Text style={styles.emptyTitle}>No sales requests</Text>
-            <Text style={styles.emptySubtitle}>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>
+              No sales requests
+            </Text>
+            <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
               When buyers request your products, they'll appear here
             </Text>
           </View>
@@ -293,11 +328,9 @@ export default function SalesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
   },
   header: {
     paddingBottom: 20,
-    backgroundColor: "#F59E0B",
   },
   headerContent: {
     flexDirection: "row",
@@ -309,11 +342,9 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#FFFFFF",
   },
   headerSubtitle: {
     fontSize: 16,
-    color: "#FEF3C7",
     marginTop: 4,
   },
   statsContainer: {
@@ -325,11 +356,9 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#FFFFFF",
   },
   statLabel: {
     fontSize: 12,
-    color: "#FEF3C7",
     marginTop: 2,
   },
   listContent: {
@@ -338,6 +367,13 @@ const styles = StyleSheet.create({
   requestCard: {
     marginHorizontal: 16,
     marginVertical: 8,
+    padding: 16,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   requestHeader: {
     flexDirection: "row",
@@ -351,12 +387,10 @@ const styles = StyleSheet.create({
   productName: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#111827",
     marginBottom: 4,
   },
   buyerName: {
     fontSize: 14,
-    color: "#6B7280",
   },
   statusBadge: {
     paddingHorizontal: 8,
@@ -401,14 +435,12 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 14,
-    color: "#6B7280",
     marginLeft: 6,
     marginRight: 4,
   },
   detailValue: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#111827",
   },
   totalContainer: {
     flexDirection: "row",
@@ -421,12 +453,10 @@ const styles = StyleSheet.create({
   totalLabel: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#374151",
   },
   totalAmount: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#F59E0B",
   },
   actionButtons: {
     flexDirection: "row",
@@ -465,23 +495,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F9FAFB",
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: "#6B7280",
   },
   errorContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F9FAFB",
     paddingHorizontal: 20,
   },
   errorText: {
     fontSize: 18,
-    color: "#EF4444",
     marginVertical: 16,
     textAlign: "center",
   },

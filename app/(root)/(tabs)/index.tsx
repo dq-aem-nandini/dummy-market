@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { Ionicons, FontAwesome6 } from "@expo/vector-icons";
+import { useDarkMode } from "@/app/context/DarkModeContext";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSelector } from "react-redux";
@@ -25,6 +26,7 @@ import Input from "@/app/components/ui/Input";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 
 export default function Home() {
+  const { colors } = useDarkMode();
   const [searchText, setSearchText] = useState("");
   const [filters, setFilters] = useState({ min: 0, max: 50 });
   const [priceModalVisible, setPriceModalVisible] = useState(false);
@@ -130,12 +132,16 @@ export default function Home() {
   };
 
   const renderHeader = () => (
-    <View style={[styles.header, { backgroundColor: "#8B5CF6" }]}>
+    <View style={[styles.header, { backgroundColor: colors.headerBackground }]}>
       <SafeAreaView>
         <View style={styles.headerContent}>
           <View>
-            <Text style={styles.greeting}>{getGreeting()}</Text>
-            <Text style={styles.subtitle}>Find fresh seeds for your farm</Text>
+            <Text style={[styles.greeting, { color: colors.headerText }]}>
+              {getGreeting()}
+            </Text>
+            <Text style={[styles.subtitle, { color: `${colors.headerText}CC` }]}>
+              Find fresh seeds for your farm
+            </Text>
           </View>
 
           <View style={styles.headerActions}>
@@ -147,11 +153,11 @@ export default function Home() {
               <Ionicons
                 name="notifications-outline"
                 size={32} // Increased from 24 to 28
-                color="#FFFFFF"
+                color={colors.headerText}
               />
               {notifications > 0 && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>
+                <View style={[styles.badge, { backgroundColor: colors.badgeBackground }]}>
+                  <Text style={[styles.badgeText, { color: colors.badgeText }]}>
                     {notifications > 99 ? "99+" : notifications}
                   </Text>
                 </View>
@@ -163,7 +169,7 @@ export default function Home() {
               style={styles.iconButton}
               onPress={() => router.push("/(root)/profile/wishtlist")}
             >
-              <FontAwesome6 name="heart" size={30} color="#FFFFFF" />
+              <FontAwesome6 name="heart" size={30} color={colors.headerText} />
             </TouchableOpacity>
           </View>
         </View>
@@ -205,28 +211,34 @@ export default function Home() {
 
   if (loading && !refreshing) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <LoadingSpinner size="lg" />
-        <Text style={styles.loadingText}>Loading products...</Text>
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+          Loading products...
+        </Text>
       </View>
     );
   }
   if (error) {
     return (
-      <View style={styles.errorContainer}>
+      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
         <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
          ̰
-        <Text style={styles.errorText}>Failed to load products</Text>
+        <Text style={[styles.errorText, { color: colors.text }]}>
+          Failed to load products
+        </Text>
         {/* <Button title="Retry" onPress={refetch} /> */}
         <TouchableOpacity style={styles.retryButton} onPress={refetch}>
-          <Text style={styles.retryButtonText}>Retry</Text>
+          <Text style={[styles.retryButtonText, { color: colors.surface }]}>
+            Retry
+          </Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
         data={filteredProducts}
         keyExtractor={(item) => item.id.toString()}
@@ -255,8 +267,10 @@ export default function Home() {
           <View style={styles.emptyCard}>
             <View>
               <Ionicons name="leaf-outline" size={48} color="#9CA3AF" />
-              <Text style={styles.emptyTitle}>No products found</Text>
-              <Text style={styles.emptySubtitle}>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                No products found
+              </Text>
+              <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
                 Try adjusting your search or filters
               </Text>
             </View>
@@ -272,18 +286,20 @@ export default function Home() {
         onRequestClose={() => setPriceModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Filter by Price</Text>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
+                Filter by Price
+              </Text>
               <TouchableOpacity
                 onPress={() => setPriceModalVisible(false)}
                 style={styles.closeButton}
               >
-                <Ionicons name="close" size={24} color="#6B7280" />
+                <Ionicons name="close" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.sliderLabel}>
+            <Text style={[styles.sliderLabel, { color: colors.text }]}>
               Price Range: ₹{filters.min} - ₹{filters.max}
             </Text>
 
@@ -295,12 +311,12 @@ export default function Home() {
               onValuesChangeFinish={(values) =>
                 setFilters({ min: values[0], max: values[1] })
               }
-              selectedStyle={{ backgroundColor: "#8B5CF6" }}
-              unselectedStyle={{ backgroundColor: "#E5E7EB" }}
+              selectedStyle={{ backgroundColor: colors.primary }}
+              unselectedStyle={{ backgroundColor: colors.border }}
               containerStyle={{ height: 40 }}
               trackStyle={{ height: 4, borderRadius: 2 }}
               markerStyle={{
-                backgroundColor: "#8B5CF6",
+                backgroundColor: colors.primary,
                 height: 20,
                 width: 20,
                 borderRadius: 10,
@@ -314,7 +330,9 @@ export default function Home() {
                 refetch();
               }}
             >
-              <Text style={styles.applyButtonText}>Apply Filter</Text>
+              <Text style={[styles.applyButtonText, { color: colors.surface }]}>
+                Apply Filter
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -328,21 +346,25 @@ export default function Home() {
         onRequestClose={() => setRequestModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Request Product</Text>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
+                Request Product
+              </Text>
               <TouchableOpacity
                 onPress={() => setRequestModalVisible(false)}
                 style={styles.closeButton}
               >
-                <Ionicons name="close" size={24} color="#6B7280" />
+                <Ionicons name="close" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
             {selectedProduct && (
               <>
-                <Text style={styles.productName}>{selectedProduct.name}</Text>
-                <Text style={styles.productPrice}>
+                <Text style={[styles.productName, { color: colors.text }]}>
+                  {selectedProduct.name}
+                </Text>
+                <Text style={[styles.productPrice, { color: colors.primary }]}>
                   ₹{selectedProduct.pricePerKg}/kg
                 </Text>
 
@@ -394,8 +416,10 @@ export default function Home() {
 
                 {inputQty && (
                   <View style={styles.totalContainer}>
-                    <Text style={styles.totalLabel}>Total Amount:</Text>
-                    <Text style={styles.totalAmount}>
+                    <Text style={[styles.totalLabel, { color: colors.text }]}>
+                      Total Amount:
+                    </Text>
+                    <Text style={[styles.totalAmount, { color: colors.primary }]}>
                       ₹
                       {(
                         (unit === "kg"
@@ -411,7 +435,7 @@ export default function Home() {
                   style={styles.requestSubmitButton}
                   onPress={confirmRequest}
                 >
-                  <Text style={styles.requestSubmitButtonText}>
+                  <Text style={[styles.requestSubmitButtonText, { color: colors.surface }]}>
                     Send Request
                   </Text>
                 </TouchableOpacity>
@@ -427,7 +451,6 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
   },
   header: {
     paddingBottom: 20,
@@ -442,11 +465,9 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#FFFFFF",
   },
   subtitle: {
     fontSize: 16,
-    color: "#E0E7FF",
     marginTop: 4,
   },
 
@@ -465,7 +486,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     right: 0,
-    backgroundColor: "#EF4444",
     borderRadius: 10,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -475,7 +495,6 @@ const styles = StyleSheet.create({
   },
 
   badgeText: {
-    color: "#FFFFFF",
     fontSize: 10,
     fontWeight: "bold",
   },
@@ -508,23 +527,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F9FAFB",
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: "#6B7280",
   },
   errorContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F9FAFB",
     paddingHorizontal: 20,
   },
   errorText: {
     fontSize: 18,
-    color: "#EF4444",
     marginVertical: 16,
     textAlign: "center",
   },
@@ -537,12 +552,10 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#374151",
     marginTop: 16,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: "#6B7280",
     marginTop: 8,
     textAlign: "center",
   },
@@ -554,7 +567,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   modalContent: {
-    backgroundColor: "#FFFFFF",
     borderRadius: 20,
     padding: 24,
     width: "100%",
@@ -569,7 +581,6 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#111827",
   },
   closeButton: {
     padding: 4,
@@ -577,7 +588,6 @@ const styles = StyleSheet.create({
   sliderLabel: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#374151",
     marginBottom: 20,
     textAlign: "center",
   },
@@ -587,12 +597,10 @@ const styles = StyleSheet.create({
   productName: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#111827",
     marginBottom: 8,
   },
   productPrice: {
     fontSize: 16,
-    color: "#8B5CF6",
     fontWeight: "600",
     marginBottom: 20,
   },
@@ -639,18 +647,15 @@ const styles = StyleSheet.create({
   totalLabel: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#374151",
   },
   totalAmount: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#8B5CF6",
   },
   requestSubmitButton: {
     marginTop: 8,
   },
   applyButtonText: {
-    color: "#fff",
     fontSize: 16,
     fontWeight: "600",
     textAlign: "center",
@@ -661,7 +666,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   requestSubmitButtonText: {
-    color: "#fff",
     fontSize: 16,
     fontWeight: "600",
     textAlign: "center",

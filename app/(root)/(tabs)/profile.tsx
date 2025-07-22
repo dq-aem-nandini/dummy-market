@@ -362,8 +362,8 @@ export default function ProfileScreen() {
                 <Switch
                   value={item.value}
                   onValueChange={item.onToggle}
-                  trackColor={{ false: colors.border, true: colors.primary }}
-                  thumbColor={item.value ? "#FFFFFF" : colors.background}
+                  trackColor={{ false: colors.border, true: `${colors.primary}80` }}
+                  thumbColor={item.value ? colors.primary : colors.textSecondary}
                 />
               </View>
             ) : (
@@ -488,13 +488,13 @@ export default function ProfileScreen() {
       badge: unreadCount > 0 ? unreadCount : undefined,
       onPress: () => router.push("/(root)/profile/notifications"),
     },
-    // {
-    //   type: 'switch',
-    //   icon: <Ionicons name="moon-outline" size={20} color={colors.primary} />,
-    //   label: 'Dark Mode',
-    //   value: isDarkMode,
-    //   onToggle: toggleDarkMode,
-    // },
+    {
+      type: 'switch',
+      icon: <Ionicons name="moon-outline" size={20} color={colors.primary} />,
+      label: 'Dark Mode',
+      value: isDarkMode,
+      onToggle: toggleDarkMode,
+    },
     {
       icon: (
         <Ionicons name="lock-closed-outline" size={20} color={colors.primary} />
