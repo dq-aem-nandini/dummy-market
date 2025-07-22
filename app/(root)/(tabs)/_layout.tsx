@@ -123,6 +123,8 @@ export default function TabsLayout() {
     );
   };
 
+  const totalBadgeCount = badges.notifications;
+
   return (
     <Tabs
       screenOptions={{
@@ -239,86 +241,3 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-        tabBarStyle: {
-          height: 75,
-          paddingBottom: 10,
-          paddingTop: 5,
-        },
-        tabBarBadgeStyle: {
-          backgroundColor: "red",
-          fontSize: 10,
-          fontWeight: "bold",
-          color: "white",
-          minWidth: 18,
-          height: 18,
-          textAlign: "center",
-          alignItems: "center",
-          justifyContent: "center",
-        },
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Home",
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="home" color={color} size={size} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="myproducts"
-        options={{
-          title: "My-Products",
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="seedling" color={color} size={size} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="sales"
-        options={{
-          title: "Sales",
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="sellcast" color={color} size={size} />
-          ),
-        }}
-      />
-
-      <Tabs.Screen
-        name="orders"
-        options={{
-          title: "Order",
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="shopping-basket" color={color} size={size} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="chat"
-        options={{
-          title: "Chat",
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="rocketchat" color={color} size={size} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="user" color={color} size={size} />
-          ),
-          tabBarBadge: totalBadgeCount > 0 ? totalBadgeCount : undefined,
-        }}
-      />
-      {/* <Tabs.Screen
-        name="cart"
-        options={{
-          href: null, // Hide this tab as it's not implemented
-        }}
-      /> */}
-    </Tabs>
-  );
-}
