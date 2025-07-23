@@ -61,6 +61,7 @@ export default function TabsLayout() {
     const uid = await AsyncStorage.getItem("userId");
     if (!uid) return;
     setUserId(uid);
+    
     connectWebSocket(() => {
       subscribeToSeller(uid, (msg) => {
         try {
@@ -72,6 +73,7 @@ export default function TabsLayout() {
           logger.error("WebSocket message parse error", err);
         }
       });
+      
       subscribeToBuyer(uid, (msg) => {
         try {
           const newNotif: Notification = JSON.parse(msg.body);
@@ -103,7 +105,10 @@ export default function TabsLayout() {
   useEffect(() => {
     fetchAllNotifications();
     setupWebSocket();
-    return () => disconnectWebSocket();
+    
+    return () => {
+      disconnectWebSocket();
+    };
   }, []);
 
   const renderTabBarBadge = (count: number) => {

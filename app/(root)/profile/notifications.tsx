@@ -50,6 +50,13 @@ export default function NotificationsScreen() {
     }, [dispatch])
   );
 
+  // Also clear badge when component mounts
+  useEffect(() => {
+    dispatch(clearBadge('notifications'));
+    dispatch(markAllAsRead());
+    dispatch(setLastReadTimestamp(new Date().toISOString()));
+  }, [dispatch]);
+
   const handleClearNotification = async (id: number) => {
     try {
       await markNotificationCleared(id); // Call backend

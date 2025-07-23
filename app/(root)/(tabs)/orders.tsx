@@ -32,7 +32,15 @@ export default function OrdersScreen() {
 
   const sentNotifications = response?.response ?? [];
   const [refreshing, setRefreshing] = React.useState(false);
-  const acceptedRequests = sentNotifications.filter(
+  
+  // Sort notifications by sendAt date (newest first)
+  const sortedNotifications = [...sentNotifications].sort((a, b) => {
+    const dateA = new Date(a.sendAt || 0).getTime();
+    const dateB = new Date(b.sendAt || 0).getTime();
+    return dateB - dateA;
+  });
+  
+  const acceptedRequests = sortedNotifications.filter(
     (item) => item.requestStatus === "PENDING"
   );
 
@@ -113,7 +121,7 @@ export default function OrdersScreen() {
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
               <Text style={[styles.statNumber, { color: colors.headerText }]}>
-                {sentNotifications.length}
+                {sortedNotifications.length}
               </Text>
               <Text style={[styles.statLabel, { color: `${colors.headerText}CC` }]}>
                 Total
@@ -282,7 +290,7 @@ export default function OrdersScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
-        data={sentNotifications}
+        data={sortedNotifications}
         keyExtractor={(item) => item.id.toString()}
         ListHeaderComponent={renderHeader}
         renderItem={renderOrderItem}
