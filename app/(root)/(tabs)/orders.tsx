@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -10,15 +10,13 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useDispatch } from "react-redux";
-import { clearBadge } from "@/store/badgeSlice";
-import { useFocusEffect } from "expo-router";
-import { useCallback } from "react";
-import { useDarkMode } from "@/app/context/DarkModeContext";
 import { getSentNotifications } from "@/api/services";
 import { useApi } from "@/hooks/useApi";
+import { clearBadge, setBadgeCount } from "@/store/badgeSlice";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
+import { useDarkMode } from "@/app/context/DarkModeContext";
 
 export default function OrdersScreen() {
   const { colors } = useDarkMode();
@@ -32,7 +30,7 @@ export default function OrdersScreen() {
 
   const sentNotifications = response?.response ?? [];
   const [refreshing, setRefreshing] = React.useState(false);
-  const acceptedRequests = sentNotifications.filter(
+  const pendingRequests = sentNotifications.filter(
     (item) => item.requestStatus === "PENDING"
   );
 
@@ -41,6 +39,11 @@ export default function OrdersScreen() {
     await refetch();
     setRefreshing(false);
   }, [refetch]);
+
+  // Update badge count when data changes
+  React.useEffect(() => {
+    dispatch(setBadgeCount({ type: 'orders', count: pendingRequests.length }));
+  }, [pendingRequests.length, dispatch]);
 
   // Clear orders badge when screen is focused
   useFocusEffect(
@@ -98,31 +101,29 @@ export default function OrdersScreen() {
   // };
 
   const renderHeader = () => (
-    <View style={[styles.header, { backgroundColor: colors.headerBackground }]}>
+
+    <View
+      style={[styles.header, { backgroundColor: colors.headerBackground }]}
+    >
       <SafeAreaView>
         <View style={styles.headerContent}>
           <View>
-            <Text style={[styles.headerTitle, { color: colors.headerText }]}>
-              My Orders
-            </Text>
+            <Text style={[styles.headerTitle, { color: colors.headerText }]}>My Orders</Text>
             <Text style={[styles.headerSubtitle, { color: `${colors.headerText}CC` }]}>
-              {acceptedRequests.length} order{acceptedRequests.length !== 1 ? 's' : ''} placed
+              {pendingRequests.length} pending order{pendingRequests.length !== 1 ? 's' : ''}
             </Text>
           </View>
 
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
-              <Text style={[styles.statNumber, { color: colors.headerText }]}>
-                {sentNotifications.length}
-              </Text>
-              <Text style={[styles.statLabel, { color: `${colors.headerText}CC` }]}>
-                Total
-              </Text>
+              <Text style={[styles.statNumber, { color: colors.headerText }]}>{sentNotifications.length}</Text>
+              <Text style={[styles.statLabel, { color: `${colors.headerText}CC` }]}>Total</Text>
             </View>
           </View>
         </View>
       </SafeAreaView>
     </View>
+
   );
 
   const renderOrderItem = ({ item, index }: { item: any; index: number }) => {
@@ -174,38 +175,26 @@ export default function OrdersScreen() {
           <View style={styles.orderDetails}>
             <View style={styles.detailRow}>
               <View style={styles.detailItem}>
-                <Ionicons name="scale-outline" size={16} color="#6B7280" />
-                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
-                  Quantity
-                </Text>
-                <Text style={[styles.detailValue, { color: colors.text }]}>
-                  {item.desiredQuantity} kg
-                </Text>
+                <Ionicons name="scale-outline" size={16} color={colors.textSecondary} />
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Quantity</Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>{item.desiredQuantity} kg</Text>
               </View>
 
               <View style={styles.detailItem}>
-                <Ionicons name="cash-outline" size={16} color="#6B7280" />
-                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
-                  Price
-                </Text>
-                <Text style={[styles.detailValue, { color: colors.text }]}>
-                  ₹{item.desiredPricePerKg}/kg
-                </Text>
+                <Ionicons name="cash-outline" size={16} color={colors.textSecondary} />
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Price</Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>₹{item.desiredPricePerKg}/kg</Text>
               </View>
             </View>
 
-            <View style={styles.totalContainer}>
-              <Text style={[styles.totalLabel, { color: colors.text }]}>
-                Total Amount:
-              </Text>
-              <Text style={[styles.totalAmount, { color: colors.primary }]}>
-                ₹{totalAmount}
-              </Text>
+            <View style={[styles.totalContainer, { backgroundColor: colors.background }]}>
+              <Text style={[styles.totalLabel, { color: colors.text }]}>Total Amount:</Text>
+              <Text style={[styles.totalAmount, { color: colors.primary }]}>₹{totalAmount}</Text>
             </View>
 
             {item.sendAt && (
               <View style={styles.dateContainer}>
-                <Ionicons name="calendar-outline" size={14} color="#6B7280" />
+                <Ionicons name="calendar-outline" size={14} color={colors.textSecondary} />
                 <Text style={[styles.dateText, { color: colors.textSecondary }]}>
                   Ordered on {new Date(item.sendAt).toLocaleDateString()}
                 </Text>
@@ -216,7 +205,7 @@ export default function OrdersScreen() {
           {status === 'ACCEPTED' && (
             <View style={styles.successMessage}>
               <Ionicons name="checkmark-circle" size={16} color="#10B981" />
-              <Text style={[styles.successText, { color: colors.text }]}>
+              <Text style={styles.successText}>
                 Your order has been accepted! The seller will contact you soon.
               </Text>
             </View>
@@ -225,7 +214,7 @@ export default function OrdersScreen() {
           {status === 'REJECTED' && (
             <View style={styles.errorMessage}>
               <Ionicons name="close-circle" size={16} color="#EF4444" />
-              <Text style={[styles.errorText, { color: colors.text }]}>
+              <Text style={styles.errorText}>
                 Unfortunately, this order was rejected by the seller.
               </Text>
             </View>
@@ -233,16 +222,14 @@ export default function OrdersScreen() {
 
           <View style={styles.orderActions}>
             <TouchableOpacity
-              style={styles.chatButton}
+              style={[styles.chatButton, { backgroundColor: colors.background, borderColor: colors.primary }]}
               onPress={(e) => {
                 e.stopPropagation();
                 handleChatWithSeller(item.sellerId, item.sellerName, item.productId);
               }}
             >
-              <Ionicons name="chatbubble-outline" size={16} color="#8B5CF6" />
-              <Text style={[styles.chatButtonText, { color: colors.primary }]}>
-                Chat with Seller
-              </Text>
+              <Ionicons name="chatbubble-outline" size={16} color={colors.primary} />
+              <Text style={[styles.chatButtonText, { color: colors.primary }]}>Chat with Seller</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -254,9 +241,7 @@ export default function OrdersScreen() {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <LoadingSpinner size="lg" />
-        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-          Loading your orders...
-        </Text>
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading your orders...</Text>
       </View>
     );
   }
@@ -265,15 +250,13 @@ export default function OrdersScreen() {
     return (
       <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
         <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
-        <Text style={[styles.errorText, { color: colors.text }]}>
-          Failed to load orders
-        </Text>
+        <Text style={[styles.errorText, { color: colors.text }]}>Failed to load orders</Text>
         {/* <Button title="Retry" onPress={refetch} /> */}
         <TouchableOpacity
           onPress={refetch}
-          className="mt-4 px-6 py-2 bg-blue-600 rounded-md self-center"
+          style={[styles.retryButton, { backgroundColor: colors.primary }]}
         >
-          <Text className="text-white font-semibold text-base text-center">Retry</Text>
+          <Text style={[styles.retryButtonText, { color: colors.surface }]}>Retry</Text>
         </TouchableOpacity>
       </View>
     );
@@ -292,12 +275,10 @@ export default function OrdersScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         ListEmptyComponent={
-          <View style={styles.emptyCard}>
+          <View style={[styles.emptyCard, { backgroundColor: colors.surface }]}>
             <View style={{ alignItems: "center" }}>
               <Ionicons name="receipt-outline" size={48} color="#9CA3AF" />
-              <Text style={[styles.emptyTitle, { color: colors.text }]}>
-                No orders yet
-              </Text>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>No orders yet</Text>
               <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
                 When you request products from sellers, they'll appear here
               </Text>
@@ -313,9 +294,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    paddingBottom: 20,
-  },
+  header: { paddingBottom: 20 },
   headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -351,13 +330,6 @@ const styles = StyleSheet.create({
   orderCard: {
     marginHorizontal: 16,
     marginVertical: 8,
-    padding: 16,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   orderHeader: {
     flexDirection: 'row',
@@ -438,7 +410,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
     padding: 12,
     borderRadius: 8,
     marginBottom: 8,
@@ -468,6 +439,7 @@ const styles = StyleSheet.create({
   },
   successText: {
     fontSize: 14,
+    color: '#065F46',
     marginLeft: 8,
     flex: 1,
   },
@@ -480,6 +452,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 14,
+    color: '#991B1B',
     marginLeft: 8,
     flex: 1,
   },
@@ -492,7 +465,6 @@ const styles = StyleSheet.create({
   chatButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
@@ -520,12 +492,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
   },
-  // errorText: {
-  //   fontSize: 18,
-  //   color: '#EF4444',
-  //   marginVertical: 16,
-  //   textAlign: 'center',
-  // },
+  retryButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginTop: 16,
+  },
+  retryButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
   emptyCard: {
     alignItems: 'center',
     paddingVertical: 40,

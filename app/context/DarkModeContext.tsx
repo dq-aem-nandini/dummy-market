@@ -16,6 +16,13 @@ interface DarkModeContextProps {
     card: string;
     headerBackground: string;
     headerText: string;
+    badgeBackground: string;  
+    badgeText: string;  
+    tabBarBackground: string;   
+    tabBarBorder: string;       
+    tabBarActive: string;      
+    tabBarInactive: string;   
+    textPrimary: string;   
   };
 }
 
@@ -23,6 +30,7 @@ const lightColors = {
   background: "#F9FAFB",
   surface: "#FFFFFF",
   text: "#111827",
+  textPrimary: "#111827",
   textSecondary: "#6B7280",
   border: "#E5E7EB",
   primary: "#8B5CF6",
@@ -41,6 +49,7 @@ const darkColors = {
   background: "#111827",
   surface: "#1F2937",
   text: "#F9FAFB",
+  textPrimary: "#111827",
   textSecondary: "#9CA3AF",
   border: "#374151",
   primary: "#A78BFA",
