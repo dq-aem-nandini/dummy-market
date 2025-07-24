@@ -4,6 +4,7 @@ import notificationReducer from "./notificationSlice";
 import productsReducer from "./productsSlice";
 import ordersReducer from "./ordersSlice";
 import chatReducer from "./chatSlice";
+import badgeReducer from "./badgeSlice";
 
 export const store = configureStore({
   reducer: {
@@ -11,6 +12,7 @@ export const store = configureStore({
     products: productsReducer,
     orders: ordersReducer,
     chat: chatReducer,
+    badges: badgeReducer,
   },
 });
 

@@ -12,12 +12,18 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useDispatch } from "react-redux";
+import { clearBadge } from "@/store/badgeSlice";
+import { useFocusEffect } from "expo-router";
+import { useCallback } from "react";
+import { useDarkMode } from "@/app/context/DarkModeContext";
 
 import { getAllUsers, getChatConversations } from "@/api/services";
 import { ChatConversation, UserModel } from "@/api/types";
 
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 import Input from "@/app/components/ui/Input";
+
 
 interface ChatUser {
   id: string;
@@ -29,6 +35,8 @@ interface ChatUser {
 }
 
 export default function ChatScreen() {
+  const { colors } = useDarkMode();
+  const dispatch = useDispatch();
   const [users, setUsers] = useState<ChatUser[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<ChatUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,6 +47,13 @@ export default function ChatScreen() {
     fetchConversations();
     getCurrentUserId();
   }, []);
+
+  // Clear chat badge when screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(clearBadge('chat'));
+    }, [dispatch])
+  );
 
   useEffect(() => {
     if (searchText.trim()) {
@@ -74,7 +89,14 @@ export default function ChatScreen() {
         }
       }
 
-      const chatUsers: ChatUser[] = Array.from(uniqueMap.values()).map(
+      const chatUsers: ChatUser[] = Array.from(uniqueMap.values())
+        .sort((a, b) => {
+          // Sort by lastMessageTime (newest first)
+          const timeA = new Date(a.lastMessageTime).getTime();
+          const timeB = new Date(b.lastMessageTime).getTime();
+          return timeB - timeA;
+        })
+        .map(
         (conv) => ({
           id: conv.partnerId,
           name: conv.partnerName,
@@ -136,35 +158,43 @@ export default function ChatScreen() {
 
           <View style={styles.chatInfo}>
             <View style={styles.chatHeader}>
-              <Text style={styles.userName}>{item.name}</Text>
-              <Text style={styles.timestamp}>{item.lastMessageTime}</Text>
+              <Text style={[styles.userName, { color: colors.text }]}>
+                {item.name}
+              </Text>
+              <Text style={[styles.timestamp, { color: colors.textSecondary }]}>
+                {item.lastMessageTime}
+              </Text>
             </View>
 
             <View style={styles.messageRow}>
-              <Text style={styles.lastMessage} numberOfLines={1}>
+              <Text style={[styles.lastMessage, { color: colors.textSecondary }]} numberOfLines={1}>
                 {item.lastMessage}
               </Text>
               {item.unreadCount && item.unreadCount > 0 && (
-                <View style={styles.unreadBadge}>
-                  <Text style={styles.unreadText}>{item.unreadCount}</Text>
+                <View style={[styles.unreadBadge, { backgroundColor: colors.primary }]}>
+                  <Text style={[styles.unreadText, { color: colors.surface }]}>
+                    {item.unreadCount}
+                  </Text>
                 </View>
               )}
             </View>
           </View>
 
-          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+          <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
         </View>
       </View>
     </TouchableOpacity>
   );
 
   const renderHeader = () => (
-    <View style={styles.header}>
+    <View style={[styles.header, { backgroundColor: colors.headerBackground }]}>
       <SafeAreaView>
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Messages</Text>
+          <Text style={[styles.headerTitle, { color: colors.headerText }]}>
+            Messages
+          </Text>
           <TouchableOpacity style={styles.headerButton}>
-            <Ionicons name="create-outline" size={24} color="#FFFFFF" />
+            <Ionicons name="create-outline" size={24} color={colors.headerText} />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -173,15 +203,17 @@ export default function ChatScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <LoadingSpinner size="lg" />
-        <Text style={styles.loadingText}>Loading conversations...</Text>
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+          Loading conversations...
+        </Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
         data={filteredUsers}
         keyExtractor={(item) => item.id!}
@@ -204,10 +236,12 @@ export default function ChatScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyCard}>
-            <View style={{ alignItems: "center" }}>
+            <View style={styles.emptyContent}>
               <Ionicons name="chatbubbles-outline" size={48} color="#9CA3AF" />
-              <Text style={styles.emptyTitle}>No conversations yet</Text>
-              <Text style={styles.emptySubtitle}>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                No conversations yet
+              </Text>
+              <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
                 Start chatting with sellers to negotiate prices
               </Text>
             </View>
@@ -221,11 +255,9 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
   },
   header: {
     paddingBottom: 20,
-    backgroundColor: "#8B5CF6",
   },
   headerContent: {
     flexDirection: "row",
@@ -237,7 +269,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#FFFFFF",
   },
   headerButton: {
     padding: 8,
@@ -293,11 +324,9 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#111827",
   },
   timestamp: {
     fontSize: 12,
-    color: "#6B7280",
   },
   messageRow: {
     flexDirection: "row",
@@ -306,12 +335,10 @@ const styles = StyleSheet.create({
   },
   lastMessage: {
     fontSize: 14,
-    color: "#6B7280",
     flex: 1,
     marginRight: 8,
   },
   unreadBadge: {
-    backgroundColor: "#8B5CF6",
     borderRadius: 10,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -319,7 +346,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   unreadText: {
-    color: "#FFFFFF",
     fontSize: 12,
     fontWeight: "600",
   },
@@ -327,12 +353,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F9FAFB",
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: "#6B7280",
   },
   emptyCard: {
     alignItems: "center",
@@ -340,15 +364,16 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 40,
   },
+  emptyContent: {
+    alignItems: "center",
+  },
   emptyTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#374151",
     marginTop: 16,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: "#6B7280",
     marginTop: 8,
     textAlign: "center",
   },

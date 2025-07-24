@@ -6,12 +6,17 @@ import { logger } from "@/utils/logger";
 
 let stompClient: Client | null = null;
 
-const WS_URL = `http://192.168.1.27:8081/ws`;
+const WS_URL = `http://192.168.1.28:8081/ws`;
 
 /**
  * Connect to WebSocket server using SockJS and STOMP
  */
 export const connectWebSocket = (onReady: () => void) => {
+  // Disconnect existing connection if any
+  if (stompClient && stompClient.connected) {
+    stompClient.deactivate();
+  }
+  
   const socket = new SockJS(WS_URL);
   stompClient = new Client({
     webSocketFactory: () => socket,
@@ -23,9 +28,19 @@ export const connectWebSocket = (onReady: () => void) => {
     },
     onDisconnect: () => {
       logger.wsDisconnect(WS_URL);
+      // Attempt to reconnect after 3 seconds
+      setTimeout(() => {
+        if (stompClient && !stompClient.connected) {
+          logger.info("Attempting to reconnect WebSocket...");
+          stompClient.activate();
+        }
+      }, 3000);
     },
     onStompError: (frame) => {
       logger.wsError(frame);
+    },
+    onWebSocketError: (error) => {
+      logger.wsError(error);
     },
   });
 

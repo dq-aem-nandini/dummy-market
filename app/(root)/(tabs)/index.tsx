@@ -12,11 +12,13 @@ import {
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { Ionicons, FontAwesome6 } from "@expo/vector-icons";
+import { useDarkMode } from "@/app/context/DarkModeContext";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSelector } from "react-redux";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
 
+// import { selectNewNotificationsCount } from "@/store/notificationSlice";
 import useFetch from "@/hooks/useFetch";
 import { RootState } from "@/store";
 import ProductCard from "@/app/components/ProductCard";
@@ -24,7 +26,9 @@ import ProductCard from "@/app/components/ProductCard";
 import Input from "@/app/components/ui/Input";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 
+
 export default function Home() {
+  const { colors } = useDarkMode();
   const [searchText, setSearchText] = useState("");
   const [filters, setFilters] = useState({ min: 0, max: 50 });
   const [priceModalVisible, setPriceModalVisible] = useState(false);
@@ -130,12 +134,16 @@ export default function Home() {
   };
 
   const renderHeader = () => (
-    <View style={[styles.header, { backgroundColor: "#8B5CF6" }]}>
+    <View style={[styles.header, { backgroundColor: colors.headerBackground }]}>
       <SafeAreaView>
         <View style={styles.headerContent}>
           <View>
-            <Text style={styles.greeting}>{getGreeting()}</Text>
-            <Text style={styles.subtitle}>Find fresh seeds for your farm</Text>
+            <Text style={[styles.greeting, { color: colors.headerText }]}>
+              {getGreeting()}
+            </Text>
+            <Text style={[styles.subtitle, { color: `${colors.headerText}CC` }]}>
+              Find fresh seeds for your farm
+            </Text>
           </View>
 
           <View style={styles.headerActions}>
@@ -146,12 +154,12 @@ export default function Home() {
             >
               <Ionicons
                 name="notifications-outline"
-                size={32} // Increased from 24 to 28
-                color="#FFFFFF"
+                size={32}
+                color={colors.headerText}
               />
               {notifications > 0 && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>
+                <View style={[styles.badge, { backgroundColor: colors.badgeBackground }]}>
+                  <Text style={[styles.badgeText, { color: colors.badgeText }]}>
                     {notifications > 99 ? "99+" : notifications}
                   </Text>
                 </View>
@@ -163,7 +171,7 @@ export default function Home() {
               style={styles.iconButton}
               onPress={() => router.push("/(root)/profile/wishtlist")}
             >
-              <FontAwesome6 name="heart" size={30} color="#FFFFFF" />
+              <FontAwesome6 name="heart" size={30} color={colors.headerText} />
             </TouchableOpacity>
           </View>
         </View>
@@ -176,11 +184,11 @@ export default function Home() {
     const userName = "Farmer";
 
     if (hour < 12) {
-      return `Good morning, ${userName} ! `;
+      return `Good morning, ${userName}!`;
     } else if (hour < 17) {
-      return `Good afternoon, ${userName} ! `;
+      return `Good afternoon, ${userName}!`;
     } else {
-      return `Good evening, ${userName} ! `;
+      return `Good evening, ${userName}!`;
     }
   };
 
@@ -196,37 +204,50 @@ export default function Home() {
 
       <TouchableOpacity
         onPress={() => setPriceModalVisible(true)}
-        style={styles.filterButton}
+        style={[styles.filterButton, { backgroundColor: colors.surface }]}
       >
-        <Ionicons name="options-outline" size={20} color="#8B5CF6" />
+        <Ionicons name="options-outline" size={20} color={colors.primary} />
       </TouchableOpacity>
     </View>
   );
 
   if (loading && !refreshing) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <LoadingSpinner size="lg" />
-        <Text style={styles.loadingText}>Loading products...</Text>
-      </View>
-    );
-  }
-  if (error) {
-    return (
-      <View style={styles.errorContainer}>
-        <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
-         ̰
-        <Text style={styles.errorText}>Failed to load products</Text>
-        {/* <Button title="Retry" onPress={refetch} /> */}
-        <TouchableOpacity style={styles.retryButton} onPress={refetch}>
-          <Text style={styles.retryButtonText}>Retry</Text>
-        </TouchableOpacity>
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+          Loading products...
+        </Text>
       </View>
     );
   }
 
+  if (error) {
+    return (
+      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
+        <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
+        <Text style={[styles.errorText, { color: colors.text }]}>
+          Failed to load products
+        </Text>
+        <TouchableOpacity style={[styles.retryButton, { backgroundColor: colors.primary }]} onPress={refetch}>
+          <Text style={[styles.retryButtonText, { color: colors.surface }]}>
+            Retry
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+  const dynamicStyles = StyleSheet.create({
+    modalContent: {
+      width: "100%",
+      backgroundColor: colors.surface,
+      borderRadius: 10,
+      padding: 16,
+      elevation: 5,
+    },
+  })
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
         data={filteredProducts}
         keyExtractor={(item) => item.id.toString()}
@@ -253,10 +274,12 @@ export default function Home() {
         }
         ListEmptyComponent={
           <View style={styles.emptyCard}>
-            <View>
+            <View style={styles.emptyContent}>
               <Ionicons name="leaf-outline" size={48} color="#9CA3AF" />
-              <Text style={styles.emptyTitle}>No products found</Text>
-              <Text style={styles.emptySubtitle}>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                No products found
+              </Text>
+              <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
                 Try adjusting your search or filters
               </Text>
             </View>
@@ -272,18 +295,20 @@ export default function Home() {
         onRequestClose={() => setPriceModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={dynamicStyles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Filter by Price</Text>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
+                Filter by Price
+              </Text>
               <TouchableOpacity
                 onPress={() => setPriceModalVisible(false)}
                 style={styles.closeButton}
               >
-                <Ionicons name="close" size={24} color="#6B7280" />
+                <Ionicons name="close" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.sliderLabel}>
+            <Text style={[styles.sliderLabel, { color: colors.text }]}>
               Price Range: ₹{filters.min} - ₹{filters.max}
             </Text>
 
@@ -295,12 +320,12 @@ export default function Home() {
               onValuesChangeFinish={(values) =>
                 setFilters({ min: values[0], max: values[1] })
               }
-              selectedStyle={{ backgroundColor: "#8B5CF6" }}
-              unselectedStyle={{ backgroundColor: "#E5E7EB" }}
+              selectedStyle={{ backgroundColor: colors.primary }}
+              unselectedStyle={{ backgroundColor: colors.border }}
               containerStyle={{ height: 40 }}
               trackStyle={{ height: 4, borderRadius: 2 }}
               markerStyle={{
-                backgroundColor: "#8B5CF6",
+                backgroundColor: colors.primary,
                 height: 20,
                 width: 20,
                 borderRadius: 10,
@@ -308,13 +333,15 @@ export default function Home() {
             />
 
             <TouchableOpacity
-              style={styles.applyButton}
+              style={[styles.applyButton, { backgroundColor: colors.primary }]}
               onPress={() => {
-                setPriceModalVisible(true);
+                setPriceModalVisible(false);
                 refetch();
               }}
             >
-              <Text style={styles.applyButtonText}>Apply Filter</Text>
+              <Text style={[styles.applyButtonText, { color: colors.surface }]}>
+                Apply Filter
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -328,21 +355,25 @@ export default function Home() {
         onRequestClose={() => setRequestModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={dynamicStyles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Request Product</Text>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
+                Request Product
+              </Text>
               <TouchableOpacity
                 onPress={() => setRequestModalVisible(false)}
                 style={styles.closeButton}
               >
-                <Ionicons name="close" size={24} color="#6B7280" />
+                <Ionicons name="close" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
             {selectedProduct && (
               <>
-                <Text style={styles.productName}>{selectedProduct.name}</Text>
-                <Text style={styles.productPrice}>
+                <Text style={[styles.productName, { color: colors.text }]}>
+                  {selectedProduct.name}
+                </Text>
+                <Text style={[styles.productPrice, { color: colors.primary }]}>
                   ₹{selectedProduct.pricePerKg}/kg
                 </Text>
 
@@ -354,20 +385,23 @@ export default function Home() {
                     value={inputQty}
                     onChangeText={setInputQty}
                     containerStyle={styles.quantityInput}
+                    labelColor={colors.text}
                   />
 
                   <View style={styles.unitButtons}>
                     <TouchableOpacity
                       style={[
                         styles.unitButton,
-                        unit === "kg" && styles.unitButtonActive,
+                        { backgroundColor: colors.background, borderColor: colors.border },
+                        unit === "kg" && { backgroundColor: colors.primary },
                       ]}
                       onPress={() => setUnit("kg")}
                     >
                       <Text
                         style={[
                           styles.unitButtonText,
-                          unit === "kg" && styles.unitButtonTextActive,
+                          { color: colors.textSecondary },
+                          unit === "kg" && { color: colors.text },
                         ]}
                       >
                         Kg
@@ -376,14 +410,16 @@ export default function Home() {
                     <TouchableOpacity
                       style={[
                         styles.unitButton,
-                        unit === "g" && styles.unitButtonActive,
+                        { backgroundColor: colors.background, borderColor: colors.border },
+                        unit === "g" && { backgroundColor: colors.primary },
                       ]}
                       onPress={() => setUnit("g")}
                     >
                       <Text
                         style={[
                           styles.unitButtonText,
-                          unit === "g" && styles.unitButtonTextActive,
+                          { color: colors.textSecondary },
+                          unit === "g" && { color: colors.surface },
                         ]}
                       >
                         Grams
@@ -393,9 +429,11 @@ export default function Home() {
                 </View>
 
                 {inputQty && (
-                  <View style={styles.totalContainer}>
-                    <Text style={styles.totalLabel}>Total Amount:</Text>
-                    <Text style={styles.totalAmount}>
+                  <View style={[styles.totalContainer, { backgroundColor: colors.background }]}>
+                    <Text style={[styles.totalLabel, { color: colors.text }]}>
+                      Total Amount:
+                    </Text>
+                    <Text style={[styles.totalAmount, { color: colors.primary }]}>
                       ₹
                       {(
                         (unit === "kg"
@@ -408,10 +446,10 @@ export default function Home() {
                 )}
 
                 <TouchableOpacity
-                  style={styles.requestSubmitButton}
+                  style={[styles.requestSubmitButton, { backgroundColor: colors.primary }]}
                   onPress={confirmRequest}
                 >
-                  <Text style={styles.requestSubmitButtonText}>
+                  <Text style={[styles.requestSubmitButtonText, { color: colors.surface }]}>
                     Send Request
                   </Text>
                 </TouchableOpacity>
@@ -427,7 +465,6 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
   },
   header: {
     paddingBottom: 20,
@@ -442,30 +479,25 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#FFFFFF",
   },
   subtitle: {
     fontSize: 16,
-    color: "#E0E7FF",
     marginTop: 4,
   },
-
   headerActions: {
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
-    flexWrap: "wrap", // allow wrap on smaller screens
+    flexWrap: "wrap",
     maxWidth: 160,
   },
   iconButton: {
     position: "relative",
   },
-
   badge: {
     position: "absolute",
     top: 0,
     right: 0,
-    backgroundColor: "#EF4444",
     borderRadius: 10,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -473,13 +505,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-
   badgeText: {
-    color: "#FFFFFF",
     fontSize: 10,
     fontWeight: "bold",
   },
-
   searchContainer: {
     flexDirection: "row",
     paddingHorizontal: 20,
@@ -492,7 +521,6 @@ const styles = StyleSheet.create({
     marginVertical: 0,
   },
   filterButton: {
-    backgroundColor: "#FFFFFF",
     padding: 12,
     borderRadius: 12,
     shadowColor: "#000",
@@ -508,23 +536,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F9FAFB",
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: "#6B7280",
   },
   errorContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F9FAFB",
     paddingHorizontal: 20,
   },
   errorText: {
     fontSize: 18,
-    color: "#EF4444",
     marginVertical: 16,
     textAlign: "center",
   },
@@ -534,15 +558,16 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 40,
   },
+  emptyContent: {
+    alignItems: "center",
+  },
   emptyTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#374151",
     marginTop: 16,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: "#6B7280",
     marginTop: 8,
     textAlign: "center",
   },
@@ -553,13 +578,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
   },
-  modalContent: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 24,
-    width: "100%",
-    maxWidth: 400,
-  },
+  // modalContent: {
+  //   width: "100%",
+  //   maxWidth: 400,
+  // },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -569,7 +591,6 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#111827",
   },
   closeButton: {
     padding: 4,
@@ -577,22 +598,21 @@ const styles = StyleSheet.create({
   sliderLabel: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#374151",
     marginBottom: 20,
     textAlign: "center",
   },
   applyButton: {
     marginTop: 20,
+    borderRadius: 12,
+    paddingVertical: 12,
   },
   productName: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#111827",
     marginBottom: 8,
   },
   productPrice: {
     fontSize: 16,
-    color: "#8B5CF6",
     fontWeight: "600",
     marginBottom: 20,
   },
@@ -608,30 +628,19 @@ const styles = StyleSheet.create({
   },
   unitButton: {
     flex: 1,
-    backgroundColor: "#F3F4F6",
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  unitButtonActive: {
-    backgroundColor: "#8B5CF6",
-    borderColor: "#8B5CF6",
   },
   unitButtonText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#6B7280",
-  },
-  unitButtonTextActive: {
-    color: "#FFFFFF",
   },
   totalContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#F3F4F6",
     padding: 16,
     borderRadius: 12,
     marginBottom: 20,
@@ -639,49 +648,34 @@ const styles = StyleSheet.create({
   totalLabel: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#374151",
   },
   totalAmount: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#8B5CF6",
   },
   requestSubmitButton: {
     marginTop: 8,
+    borderRadius: 12,
+    paddingVertical: 12,
   },
   applyButtonText: {
-    color: "#fff",
     fontSize: 16,
     fontWeight: "600",
     textAlign: "center",
-    backgroundColor: "#8B5CF6",
-    paddingVertical: 12,
-    width: "50%",
-    marginLeft: "25%",
-    borderRadius: 12,
   },
   requestSubmitButtonText: {
-    color: "#fff",
     fontSize: 16,
     fontWeight: "600",
     textAlign: "center",
-    backgroundColor: "#8B5CF6",
-    paddingVertical: 12,
-    width: "50%",
-    marginLeft: "25%",
-    borderRadius: 12,
   },
   retryButton: {
-    backgroundColor: "#ff3b30",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 6,
     alignSelf: "center",
     marginTop: 16,
   },
-
   retryButtonText: {
-    color: "#fff",
     fontSize: 16,
     fontWeight: "600",
     textAlign: "center",

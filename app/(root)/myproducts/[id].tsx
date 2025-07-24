@@ -16,6 +16,7 @@ import { viewProduct, getReceivedNotifications } from "@/api/services";
 import { ProductDTO } from "@/api/types";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 import Constants from "expo-constants";
+import { useDarkMode } from "@/app/context/DarkModeContext";
 
 const BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl;
 
@@ -47,6 +48,7 @@ export default function MyProductDetail() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const { colors } = useDarkMode();
 
   useFocusEffect(
     useCallback(() => {
@@ -118,12 +120,27 @@ export default function MyProductDetail() {
     const totalAmount = (item.desiredQuantity * item.desiredPricePerKg).toFixed(
       2
     );
-
+    const dynamicStyles = StyleSheet.create({
+      orderCard: {
+        marginBottom: 12,
+        padding: 12,
+        backgroundColor: colors.surface,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 2,
+        borderRadius: 12,
+        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+      },
+    });
     return (
-      <View style={styles.orderCard}>
+      <View style={dynamicStyles.orderCard}>
         <View style={styles.orderHeader}>
           <View style={styles.orderInfo}>
-            <Text style={styles.orderTitle}>Order #{item.id}</Text>
+            <Text style={[styles.orderTitle, { color: colors.text }]}>
+              Order #{item.id}
+            </Text>
             <Text style={styles.buyerName}>From {item.buyerName}</Text>
           </View>
 
@@ -154,15 +171,26 @@ export default function MyProductDetail() {
 
         <View style={styles.orderDetails}>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Quantity:</Text>
-            <Text style={styles.detailValue}>{item.desiredQuantity} kg</Text>
+            <Text style={[styles.detailLabel, { color: colors.text }]}>
+              Quantity:
+            </Text>
+            {/* style={[styles.detailValue, { color: colors.text }]} */}
+            <Text style={[styles.detailValue, { color: colors.text }]}>
+              {item.desiredQuantity} kg
+            </Text>
           </View>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Price:</Text>
-            <Text style={styles.detailValue}>₹{item.desiredPricePerKg}/kg</Text>
+            <Text style={[styles.detailLabel, { color: colors.text }]}>
+              Price:
+            </Text>
+            <Text style={[styles.detailValue, { color: colors.text }]}>
+              ₹{item.desiredPricePerKg}/kg
+            </Text>
           </View>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Total:</Text>
+            <Text style={[styles.detailLabel, { color: colors.text }]}>
+              Total:
+            </Text>
             <Text style={styles.totalValue}>₹{totalAmount}</Text>
           </View>
         </View>
@@ -215,7 +243,27 @@ export default function MyProductDetail() {
   const averageRating =
     mockProductReviews.reduce((sum, review) => sum + review.rating, 0) /
     mockProductReviews.length;
-
+  const dynamicStyles = StyleSheet.create({
+    menuCard: {
+      margin: 16,
+      marginBottom: 8,
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 12,
+      backgroundColor: colors.surface,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      elevation: 2,
+      borderRadius: 12,
+      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+    },
+    productCard: {
+      margin: 16,
+      marginBottom: 8,
+    },
+  });
   return (
     <View style={styles.container}>
       <ScrollView
@@ -228,30 +276,29 @@ export default function MyProductDetail() {
         {/* Header */}
 
         <View
-          // colors={['#10B981', '#059669']}
-          style={styles.header}
+          style={[styles.header, { backgroundColor: colors.headerBackground }]}
         >
           <SafeAreaView>
             <View style={styles.headerContent}>
               <TouchableOpacity
-                onPress={() => router.back()}
+                onPress={() => router.push("/(root)/(tabs)/myproducts")}
                 style={styles.backButton}
               >
                 <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
               </TouchableOpacity>
               <Text style={styles.headerTitle}>Product Details</Text>
-              <TouchableOpacity
-                onPress={() => router.push(`/(root)/myproducts/edit/${id}`)}
+              {/* <TouchableOpacity
+                onPress={() => router.push(`/(root)/myproducts/${id}`)}
                 style={styles.editButton}
               >
                 <Ionicons name="create-outline" size={24} color="#FFFFFF" />
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
           </SafeAreaView>
         </View>
 
         {/* Product Summary */}
-        <View style={styles.productCard}>
+        <View style={dynamicStyles.menuCard}>
           <View style={styles.productContent}>
             <Image
               source={{
@@ -263,14 +310,15 @@ export default function MyProductDetail() {
             />
 
             <View style={styles.productInfo}>
-              <Text style={styles.productTitle}>{product.name}</Text>
+              <Text style={[styles.productTitle, { color: colors.text }]}>
+                {product.name}
+              </Text>
               <Text style={styles.productDescription} numberOfLines={3}>
                 {product.description}
               </Text>
 
               <View style={styles.priceContainer}>
-                <Text style={styles.price}>₹{product.pricePerKg}</Text>
-                <Text style={styles.priceUnit}>/kg</Text>
+                <Text style={styles.price}>₹{product.pricePerKg}/kg</Text>
               </View>
 
               <View style={styles.stockInfo}>
@@ -394,7 +442,6 @@ const styles = StyleSheet.create({
   },
   headerContent: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
     paddingTop: 10,
@@ -403,6 +450,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "700",
     color: "#FFFFFF",
+    paddingLeft: "22%",
   },
   backButton: {
     padding: 8,
@@ -410,10 +458,7 @@ const styles = StyleSheet.create({
   editButton: {
     padding: 8,
   },
-  productCard: {
-    margin: 16,
-    marginBottom: 8,
-  },
+
   productContent: {
     flexDirection: "row",
   },
@@ -535,10 +580,7 @@ const styles = StyleSheet.create({
     color: "#10B981",
     fontWeight: "600",
   },
-  orderCard: {
-    marginBottom: 12,
-    padding: 12,
-  },
+
   orderHeader: {
     flexDirection: "row",
     justifyContent: "space-between",

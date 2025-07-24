@@ -9,22 +9,25 @@ import {
   Platform,
   ScrollView,
   Alert,
+  SafeAreaView,
+  StatusBar,
 } from "react-native";
-import { MotiView } from "moti";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useAuth } from "../context/AuthContext";
-import AnimatedCard from "../components/ui/AnimatedCard";
-import AnimatedButton from "../components/ui/AnimatedButton";
+
+import { useDarkMode } from "../context/DarkModeContext";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function SignInScreen() {
+  const { colors } = useDarkMode();
   const { login, loading } = useAuth();
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState("");
-
+  const STATUS_BAR_HEIGHT =
+    Platform.OS === "android" ? StatusBar.currentHeight || 24 : 0;
   const handleSignIn = async () => {
     if (!userName || !password) {
       Alert.alert("Validation", "Please enter both username and password.");
@@ -33,243 +36,222 @@ export default function SignInScreen() {
 
     try {
       await login(userName, password);
-      router.replace("/(root)/(tabs)/profile");
+      router.replace("/(root)/(tabs)");
     } catch (error) {
       setLocalError("Invalid username or password");
       setTimeout(() => setLocalError(""), 3000);
     }
   };
-
+  const dynamicStyles = StyleSheet.create({
+    formCard: {
+      marginBottom: 30,
+      borderRadius: 8,
+      padding: 20,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 2,
+      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+    },
+  });
   return (
     <LinearGradient
-      colors={["#1E1B4B", "#312E81", "#4C1D95"]}
-      style={styles.container}
+      colors={colors.loginBackground}
+      style={[styles.container, { paddingTop: STATUS_BAR_HEIGHT }]}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardView}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+      <StatusBar translucent barStyle="light-content" />
+
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.keyboardView}
         >
-          {/* Header */}
-          <MotiView
-            from={{ opacity: 0, translateY: -30 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={{ type: "spring", damping: 15, stiffness: 100 }}
-            style={styles.header}
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            <Text style={styles.title}>Welcome Back 👋</Text>
-            <Text style={styles.subtitle}>
-              Sign in to continue your journey
-            </Text>
-          </MotiView>
+            {/* Header */}
+            <View style={styles.header}>
+              <Text style={styles.title}>Welcome Back 👋</Text>
+              <Text style={styles.subtitle}>
+                Sign in to continue your journey
+              </Text>
+            </View>
 
-          {/* Error message */}
-          {localError !== "" && (
-            <Text
-              style={{ color: "red", textAlign: "center", marginBottom: 10 }}
-            >
-              {localError}
-            </Text>
-          )}
+            {/* Error message */}
+            {localError !== "" && (
+              <Text style={styles.errorMessage}>{localError}</Text>
+            )}
 
-          {/* Form */}
-          <AnimatedCard
-            delay={1}
-            style={styles.formCard}
-            colors={["rgba(255, 255, 255, 0.95)", "rgba(248, 250, 252, 0.95)"]}
-          >
-            <View style={styles.form}>
-              {/* Username Input */}
-              <MotiView
-                from={{ opacity: 0, translateX: -30 }}
-                animate={{ opacity: 1, translateX: 0 }}
-                transition={{
-                  type: "spring",
-                  damping: 15,
-                  stiffness: 100,
-                  delay: 200,
-                }}
-                style={styles.inputContainer}
-              >
-                <Text style={styles.inputLabel}>Username</Text>
-                <View style={styles.inputWrapper}>
-                  <Ionicons
-                    name="person-outline"
-                    size={20}
-                    color="#6B7280"
-                    style={styles.inputIcon}
-                  />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter your username"
-                    placeholderTextColor="#9CA3AF"
-                    value={userName}
-                    keyboardType="default"
-                    onChangeText={setUserName}
-                    autoCapitalize="none"
-                  />
-                </View>
-              </MotiView>
-
-              {/* Password Input */}
-              <MotiView
-                from={{ opacity: 0, translateX: -30 }}
-                animate={{ opacity: 1, translateX: 0 }}
-                transition={{
-                  type: "spring",
-                  damping: 15,
-                  stiffness: 100,
-                  delay: 300,
-                }}
-                style={styles.inputContainer}
-              >
-                <Text style={styles.inputLabel}>Password</Text>
-                <View style={styles.inputWrapper}>
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={20}
-                    color="#6B7280"
-                    style={styles.inputIcon}
-                  />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter your password"
-                    placeholderTextColor="#9CA3AF"
-                    value={password}
-                    onChangeText={setPassword}
-                    autoCapitalize="none"
-                    secureTextEntry={!showPassword}
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowPassword(!showPassword)}
-                    style={styles.eyeIcon}
+            {/* Form */}
+            <View style={dynamicStyles.formCard}>
+              <View style={styles.form}>
+                {/* Username Input */}
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Username</Text>
+                  <View
+                    style={[
+                      styles.inputWrapper,
+                      {
+                        backgroundColor: colors.background,
+                        borderColor: colors.border,
+                      },
+                    ]}
                   >
                     <Ionicons
-                      name={showPassword ? "eye-outline" : "eye-off-outline"}
+                      name="person-outline"
                       size={20}
-                      color="#6B7280"
+                      color={colors.textSecondary}
+                      style={styles.inputIcon}
                     />
+                    <TextInput
+                      style={[styles.input, { color: colors.text }]}
+                      placeholder="Enter your username"
+                      placeholderTextColor={colors.textSecondary}
+                      value={userName}
+                      keyboardType="default"
+                      onChangeText={setUserName}
+                      autoCapitalize="none"
+                    />
+                  </View>
+                </View>
+                {/* Password Input */}
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Password</Text>
+                  <View
+                    style={[
+                      styles.inputWrapper,
+                      {
+                        backgroundColor: colors.background,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name="lock-closed-outline"
+                      size={20}
+                      color={colors.textSecondary}
+                      style={styles.inputIcon}
+                    />
+                    <TextInput
+                      style={[styles.input, { color: colors.text }]}
+                      placeholder="Enter your password"
+                      placeholderTextColor={colors.textSecondary}
+                      value={password}
+                      onChangeText={setPassword}
+                      autoCapitalize="none"
+                      secureTextEntry={!showPassword}
+                    />
+                    <TouchableOpacity
+                      onPress={() => setShowPassword(!showPassword)}
+                      style={styles.eyeIcon}
+                    >
+                      <Ionicons
+                        name={showPassword ? "eye-outline" : "eye-off-outline"}
+                        size={20}
+                        color={colors.textSecondary}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Forgot Password */}
+                <View style={styles.forgotContainer}>
+                  <TouchableOpacity>
+                    <Text
+                      style={[styles.forgotText, { color: colors.primary }]}
+                    >
+                      Forgot Password?
+                    </Text>
                   </TouchableOpacity>
                 </View>
-              </MotiView>
 
-              {/* Forgot Password */}
-              <MotiView
-                from={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{
-                  type: "spring",
-                  damping: 15,
-                  stiffness: 100,
-                  delay: 400,
-                }}
-                style={styles.forgotContainer}
-              >
-                <TouchableOpacity>
-                  <Text style={styles.forgotText}>Forgot Password?</Text>
-                </TouchableOpacity>
-              </MotiView>
+                {/* Sign In Button */}
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.signInButton,
+                      { backgroundColor: colors.primary },
+                      loading && styles.disabledButton,
+                    ]}
+                    onPress={handleSignIn}
+                    disabled={loading}
+                  >
+                    <Text
+                      style={[styles.buttonText, { color: colors.surface }]}
+                    >
+                      {loading ? "Signing In..." : "Sign In"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
 
-              {/* Sign In Button */}
-              <MotiView
-                from={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{
-                  type: "spring",
-                  damping: 15,
-                  stiffness: 100,
-                  delay: 500,
-                }}
-                style={styles.buttonContainer}
-              >
-                <AnimatedButton
-                  title={loading ? "Signing In..." : "Sign In"}
-                  onPress={handleSignIn}
-                  colors={["#8B5CF6", "#7C3AED"]}
-                  size="large"
-                />
-              </MotiView>
-
-              {/* Sign Up Link */}
-              <MotiView
-                from={{ opacity: 0, translateY: 30 }}
-                animate={{ opacity: 1, translateY: 0 }}
-                transition={{
-                  type: "spring",
-                  damping: 15,
-                  stiffness: 100,
-                  delay: 800,
-                }}
-                style={styles.signUpContainer}
-              >
-                <Text style={styles.signUpText}>Don't have an account? </Text>
-                <TouchableOpacity
-                  onPress={() => router.push("/(auth)/sign-up")}
-                >
-                  <Text style={styles.signUpLink}>Sign Up</Text>
-                </TouchableOpacity>
-              </MotiView>
+                {/* Sign Up Link */}
+                <View style={styles.signUpContainer}>
+                  <Text style={styles.signUpText}>Don't have an account? </Text>
+                  <TouchableOpacity
+                    onPress={() => router.push("/(auth)/sign-up")}
+                  >
+                    <Text
+                      style={[styles.signUpLink, { color: colors.primary }]}
+                    >
+                      Sign Up
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
-          </AnimatedCard>
-        </ScrollView>
-      </KeyboardAvoidingView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  safeArea: { flex: 1 },
   keyboardView: { flex: 1 },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 20,
-    paddingTop: 170,
-    paddingBottom: 40,
+    paddingTop: "40%",
+    // paddingBottom: 40,
   },
   header: { marginBottom: 40 },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 20,
-  },
   title: {
     fontSize: 32,
-    fontFamily: "Inter-Bold",
-    color: "#FFFFFF",
+    fontWeight: "700",
     marginBottom: 8,
     textAlign: "center",
+    color: "#FFFFFF",
   },
   subtitle: {
     fontSize: 16,
-    fontFamily: "Inter-Medium",
-    color: "#A78BFA",
+    fontWeight: "500",
     textAlign: "center",
+    color: "#FFFFFF",
   },
-  formCard: {
-    marginBottom: 30,
+  errorMessage: {
+    color: "red",
+    textAlign: "center",
+    marginBottom: 10,
+    fontSize: 14,
   },
+
   form: { gap: 20 },
   inputContainer: { gap: 8 },
   inputLabel: {
     fontSize: 14,
-    fontFamily: "Inter-SemiBold",
-    color: "#374151",
+    fontWeight: "600",
+    color: "#FFFFFF",
   },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F9FAFB",
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
     paddingHorizontal: 16,
     height: 56,
   },
@@ -277,17 +259,28 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    fontFamily: "Inter-Medium",
-    color: "#111827",
+    fontWeight: "500",
   },
   eyeIcon: { padding: 4 },
   forgotContainer: { alignItems: "flex-end" },
   forgotText: {
     fontSize: 14,
-    fontFamily: "Inter-SemiBold",
-    color: "#8B5CF6",
+    fontWeight: "600",
   },
   buttonContainer: { marginTop: 10 },
+  signInButton: {
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
   signUpContainer: {
     flexDirection: "row",
     justifyContent: "center",
@@ -295,12 +288,11 @@ const styles = StyleSheet.create({
   },
   signUpText: {
     fontSize: 16,
-    fontFamily: "Inter-Medium",
-    color: "#A78BFA",
+    fontWeight: "500",
+    color: "#FFFFFF",
   },
   signUpLink: {
     fontSize: 16,
-    fontFamily: "Inter-Bold",
-    color: "#A78BFA",
+    fontWeight: "700",
   },
 });

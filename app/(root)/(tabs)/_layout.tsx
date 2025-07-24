@@ -1,13 +1,11 @@
-// app/_layout.tsx or app/(tabs)/_layout.tsx
 import { Tabs } from "expo-router";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { View, Text, StyleSheet } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   getNotifications,
-  getReceivedNotifications,
-  getSentNotifications,
 } from "@/api/services";
 import {
   connectWebSocket,
@@ -17,24 +15,33 @@ import {
   subscribeToMessages,
 } from "@/api/websocket";
 
-import { setNotifications, addNotification } from "@/store/notificationSlice";
+import { 
+  setNotifications, 
+  addNotification, 
+  selectNewNotificationsCount 
+} from "@/store/notificationSlice";
 import { addMessage } from "@/store/chatSlice";
+import { 
+  setBadgeCount, 
+  incrementBadge, 
+  selectBadges 
+} from "@/store/badgeSlice";
 import { RootState } from "@/store";
 import { Notification } from "@/api/types";
 import { logger } from "@/utils/logger";
+import { useDarkMode } from "@/app/context/DarkModeContext";
 
 export default function TabsLayout() {
   const dispatch = useDispatch();
-  const notifications = useSelector(
-    (state: RootState) => state.notifications.notifications
-  );
+  const { colors } = useDarkMode();
+  const badges = useSelector(selectBadges);
+  const newNotificationsCount = useSelector(selectNewNotificationsCount);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // const deduplicateById = (list: Notification[]) => {
-  //   const map = new Map<number, Notification>();
-  //   list.forEach((n) => map.set(n.id, n));
-  //   return Array.from(map.values());
-  // };
+  useEffect(() => {
+    // Update notification badge when notifications change
+    dispatch(setBadgeCount({ type: 'notifications', count: newNotificationsCount }));
+  }, [newNotificationsCount, dispatch]);
 
   const fetchAllNotifications = async () => {
     try {
@@ -51,21 +58,27 @@ export default function TabsLayout() {
     const uid = await AsyncStorage.getItem("userId");
     if (!uid) return;
     setUserId(uid);
+    
+    
     connectWebSocket(() => {
       subscribeToSeller(uid, (msg) => {
         try {
           const newNotif: Notification = JSON.parse(msg.body);
           logger.wsMessage("Seller notification received", newNotif);
           dispatch(addNotification(newNotif));
+          dispatch(incrementBadge('sales'));
         } catch (err) {
           logger.error("WebSocket message parse error", err);
         }
       });
+      
+      
       subscribeToBuyer(uid, (msg) => {
         try {
           const newNotif: Notification = JSON.parse(msg.body);
           logger.wsMessage("Buyer notification received", newNotif);
           dispatch(addNotification(newNotif));
+          dispatch(incrementBadge('orders'));
         } catch (err) {
           logger.error("WebSocket message parse error", err);
         }
@@ -80,6 +93,7 @@ export default function TabsLayout() {
           // Create conversation ID
           const conversationId = `${chatMessage.senderId}-${chatMessage.receiverId}-${chatMessage.productId}`;
           dispatch(addMessage({ conversationId, message: chatMessage }));
+          dispatch(incrementBadge('chat'));
         } catch (err) {
           logger.error("Chat message parse error", err);
         }
@@ -90,31 +104,47 @@ export default function TabsLayout() {
   useEffect(() => {
     fetchAllNotifications();
     setupWebSocket();
+    
     return () => disconnectWebSocket();
   }, []);
 
-  const totalBadgeCount = notifications.filter((n) => !n.isRead).length;
+  const renderTabBarBadge = (count: number) => {
+    if (count === 0) return undefined;
+    return count > 99 ? "99+" : count.toString();
+  };
+
+  const CustomTabBarBadge = ({ count }: { count: number }) => {
+    if (count === 0) return null;
+    
+    return (
+      <View style={[styles.customBadge, { backgroundColor: colors.badgeBackground }]}>
+        <Text style={[styles.customBadgeText, { color: colors.badgeText }]}>
+          {count > 99 ? "99+" : count.toString()}
+        </Text>
+      </View>
+    );
+  };
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#6B21A8",
+        tabBarActiveTintColor: colors.tabBarActive,
+        tabBarInactiveTintColor: colors.tabBarInactive,
         tabBarStyle: {
+          backgroundColor: colors.tabBarBackground,
+          borderTopColor: colors.tabBarBorder,
           height: 75,
           paddingBottom: 10,
           paddingTop: 5,
         },
         tabBarBadgeStyle: {
-          backgroundColor: "red",
+          backgroundColor: colors.badgeBackground,
+          color: colors.badgeText,
           fontSize: 10,
           fontWeight: "bold",
-          color: "white",
           minWidth: 18,
           height: 18,
-          textAlign: "center",
-          alignItems: "center",
-          justifyContent: "center",
         },
       }}
     >
@@ -141,18 +171,25 @@ export default function TabsLayout() {
         options={{
           title: "Sales",
           tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="sellcast" color={color} size={size} />
+            <View>
+              <FontAwesome5 name="sellcast" color={color} size={size} />
+              <CustomTabBarBadge count={badges.sales} />
+            </View>
           ),
+          tabBarBadge: renderTabBarBadge(badges.sales),
         }}
       />
-
       <Tabs.Screen
         name="orders"
         options={{
           title: "Order",
           tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="shopping-basket" color={color} size={size} />
+            <View>
+              <FontAwesome5 name="shopping-basket" color={color} size={size} />
+              <CustomTabBarBadge count={badges.orders} />
+            </View>
           ),
+          tabBarBadge: renderTabBarBadge(badges.orders),
         }}
       />
       <Tabs.Screen
@@ -160,8 +197,12 @@ export default function TabsLayout() {
         options={{
           title: "Chat",
           tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="rocketchat" color={color} size={size} />
+            <View>
+              <FontAwesome5 name="rocketchat" color={color} size={size} />
+              <CustomTabBarBadge count={badges.chat} />
+            </View>
           ),
+          tabBarBadge: renderTabBarBadge(badges.chat),
         }}
       />
       <Tabs.Screen
@@ -169,17 +210,34 @@ export default function TabsLayout() {
         options={{
           title: "Profile",
           tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="user" color={color} size={size} />
+            <View>
+              <FontAwesome5 name="user" color={color} size={size} />
+              <CustomTabBarBadge count={badges.notifications} />
+            </View>
           ),
-          tabBarBadge: totalBadgeCount > 0 ? totalBadgeCount : undefined,
+          tabBarBadge: renderTabBarBadge(badges.notifications),
         }}
       />
-      {/* <Tabs.Screen
-        name="cart"
-        options={{
-          href: null, // Hide this tab as it's not implemented
-        }}
-      /> */}
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  customBadge: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    minWidth: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  customBadgeText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+});

@@ -16,6 +16,7 @@ interface InputProps extends TextInputProps {
   rightIcon?: string;
   onRightIconPress?: () => void;
   containerStyle?: any;
+  labelColor?: string;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -25,6 +26,7 @@ const Input: React.FC<InputProps> = ({
   rightIcon,
   onRightIconPress,
   containerStyle,
+  labelColor = "#000", // fallback
   style,
   ...props
 }) => {
@@ -32,7 +34,8 @@ const Input: React.FC<InputProps> = ({
 
   return (
     <View style={[styles.container, containerStyle]}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {/* {label && <Text style={styles.label}>{label}</Text>} */}
+      {label && <Text style={[styles.label, { color: labelColor }]}>{label}</Text>}
 
       <View style={styles.inputContainer}>
         {leftIcon && (

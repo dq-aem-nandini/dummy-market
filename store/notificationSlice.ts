@@ -7,12 +7,14 @@ import { RootState } from '@/store'; // adjust path if needed
 interface NotificationState {
   notifications: Notification[];
   loading: boolean;
+  lastReadTimestamp: string | null;
 }
 
 // --- Initial State ---
 const initialState: NotificationState = {
   notifications: [],
   loading: false,
+  lastReadTimestamp: null,
 };
 
 // --- Slice ---
@@ -26,16 +28,23 @@ const notificationSlice = createSlice({
     addNotification(state, action: PayloadAction<Notification>) {
       state.notifications = [action.payload, ...state.notifications];
     },
-    // markAsRead(state, action: PayloadAction<number>) {
-    //   const notif = state.notifications.find(n => n.id === action.payload);
-    //   if (notif) notif.isRead = true;
-    // },
+    markAsRead(state, action: PayloadAction<number>) {
+      const notif = state.notifications.find(n => n.id === action.payload);
+      if (notif) notif.isRead = true;
+    },
+    markAllAsRead(state) {
+      state.notifications.forEach(n => n.isRead = true);
+      state.lastReadTimestamp = new Date().toISOString();
+    },
     clearNotification(state, action: PayloadAction<number>) {
       const notif = state.notifications.find(n => n.id === action.payload);
       if (notif) notif.isClear = true;
     },
     setLoading(state, action: PayloadAction<boolean>) {
       state.loading = action.payload;
+    },
+    setLastReadTimestamp(state, action: PayloadAction<string>) {
+      state.lastReadTimestamp = action.payload;
     },
   },
 });
@@ -44,8 +53,11 @@ const notificationSlice = createSlice({
 export const {
   setNotifications,
   addNotification,
+  markAsRead,
+  markAllAsRead,
   clearNotification,
   setLoading,
+  setLastReadTimestamp,
 } = notificationSlice.actions;
 
 // --- Export Reducer ---
@@ -66,3 +78,16 @@ export const selectUnreadCount = (state: RootState) =>
 
 export const selectUnclearedCount = (state: RootState) =>
   state.notifications.notifications.filter(n => !n.isClear).length;
+
+export const selectLastReadTimestamp = (state: RootState) =>
+  state.notifications.lastReadTimestamp;
+
+export const selectNewNotificationsCount = (state: RootState) => {
+  const lastRead = state.notifications.lastReadTimestamp;
+  if (!lastRead) return state.notifications.notifications.length;
+  
+  return state.notifications.notifications.filter(n => {
+    const notifTime = n.requestNotificationDto?.sendAt || n.createdAt;
+    return notifTime && new Date(notifTime) > new Date(lastRead);
+  }).length;
+};

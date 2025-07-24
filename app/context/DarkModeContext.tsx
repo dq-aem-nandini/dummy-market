@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Appearance, ColorSchemeName } from "react-native";
+import { Appearance, ColorSchemeName, StatusBar } from "react-native";
 
 interface DarkModeContextProps {
   isDarkMode: boolean;
@@ -8,6 +8,9 @@ interface DarkModeContextProps {
   colorScheme: ColorSchemeName;
   colors: {
     background: string;
+    loginBackground: readonly [string, string, ...string[]];
+
+
     surface: string;
     text: string;
     textSecondary: string;
@@ -16,6 +19,13 @@ interface DarkModeContextProps {
     card: string;
     headerBackground: string;
     headerText: string;
+    badgeBackground: string;
+    badgeText: string;
+    tabBarBackground: string;
+    tabBarBorder: string;
+    tabBarActive: string;
+    tabBarInactive: string;
+    textPrimary: string;
   };
 }
 
@@ -23,24 +33,40 @@ const lightColors = {
   background: "#F9FAFB",
   surface: "#FFFFFF",
   text: "#111827",
+  textPrimary: "#111827",
   textSecondary: "#6B7280",
   border: "#E5E7EB",
   primary: "#8B5CF6",
   card: "#FFFFFF",
   headerBackground: "#8B5CF6",
   headerText: "#FFFFFF",
+  tabBarBackground: "#FFFFFF",
+  tabBarBorder: "#E5E7EB",
+  tabBarActive: "#8B5CF6",
+  tabBarInactive: "#6B7280",
+  badgeBackground: "#EF4444",
+  badgeText: "#FFFFFF",
+  loginBackground: ["#1E1B4B", "#312E81", "#4C1D95"] as const,
 };
 
 const darkColors = {
   background: "#111827",
   surface: "#1F2937",
   text: "#F9FAFB",
+  textPrimary: "#111827",
   textSecondary: "#9CA3AF",
   border: "#374151",
   primary: "#A78BFA",
   card: "#1F2937",
   headerBackground: "#1F2937",
   headerText: "#F9FAFB",
+  tabBarBackground: "#1F2937",
+  tabBarBorder: "#374151",
+  tabBarActive: "#A78BFA",
+  tabBarInactive: "#9CA3AF",
+  badgeBackground: "#EF4444",
+  badgeText: "#FFFFFF",
+  loginBackground: [ "#1F2937","#9f9ca6","#1F2937",] as const,
 };
 
 const DarkModeContext = createContext<DarkModeContextProps>(
@@ -61,6 +87,9 @@ export const DarkModeProvider = ({
     // Load saved preference
     loadDarkModePreference();
 
+    // Update StatusBar when dark mode changes
+    StatusBar.setBarStyle(isDarkMode ? "light-content" : "dark-content", true);
+
     // Listen to system changes
     const subscription = Appearance.addChangeListener(({ colorScheme }) => {
       setColorScheme(colorScheme);
@@ -69,7 +98,7 @@ export const DarkModeProvider = ({
     });
 
     return () => subscription?.remove();
-  }, []);
+  }, [isDarkMode]);
 
   const loadDarkModePreference = async () => {
     try {
@@ -101,6 +130,7 @@ export const DarkModeProvider = ({
     try {
       const newMode = !isDarkMode;
       setIsDarkMode(newMode);
+      StatusBar.setBarStyle(newMode ? "light-content" : "dark-content", true);
       await AsyncStorage.setItem("darkModePreference", JSON.stringify(newMode));
     } catch (error) {
       console.error("Error saving dark mode preference:", error);

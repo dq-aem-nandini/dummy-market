@@ -30,6 +30,7 @@ import Input from "@/app/components/ui/Input";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 import Constants from "expo-constants";
 
+
 const BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl;
 
 // Mock reviews data - in real app, this would come from API
@@ -536,9 +537,7 @@ export default function ProductDetail() {
         </View>
 
         {/* Product Info */}
-        <View
-          style={[styles.productInfoCard, { backgroundColor: colors.surface }]}
-        >
+        <View style={styles.productInfoCard}>
           <Text style={[styles.productTitle, { color: colors.text }]}>
             {product.name}
           </Text>
@@ -602,9 +601,7 @@ export default function ProductDetail() {
 
         {/* Action Buttons */}
         {!isOwner && (
-          <View
-            style={[styles.actionCard, { backgroundColor: colors.surface }]}
-          >
+          <View style={styles.actionCard}>
             <View style={styles.actionButtons}>
               {/* <Button
                 title="Order Now"
@@ -644,9 +641,7 @@ export default function ProductDetail() {
         )}
 
         {/* Reviews Section */}
-        <View
-          style={[styles.reviewsSection, { backgroundColor: colors.surface }]}
-        >
+        <View style={styles.reviewsSection}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
               Customer Reviews
@@ -669,9 +664,7 @@ export default function ProductDetail() {
 
         {/* Similar Products */}
         {similarProducts.length > 0 && (
-          <View
-            style={[styles.similarSection, { backgroundColor: colors.surface }]}
-          >
+          <View style={styles.similarSection}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
               Similar Products
             </Text>

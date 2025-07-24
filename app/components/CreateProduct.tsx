@@ -11,14 +11,13 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import { MotiView } from "moti";
-import { LinearGradient } from "expo-linear-gradient";
+
 import Constants from "expo-constants";
 
 import Input from "./ui/Input";
-import Button from "./ui/Button";
-import Card from "./ui/Card";
+
 import { createProduct, updateProduct } from "@/api/services";
+import { useDarkMode } from "@/app/context/DarkModeContext";
 
 const BASE_URL =
   Constants.expoConfig?.extra?.apiBaseUrl || "http://localhost:8081";
@@ -30,6 +29,7 @@ export default function CreateProduct({
   onClose: () => void;
   editData?: any;
 }) {
+  const { colors } = useDarkMode();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [quantityKg, setQuantityKg] = useState("");
@@ -118,36 +118,50 @@ export default function CreateProduct({
     }
   };
 
+  const dynamicStyles = StyleSheet.create({
+    card: {
+      padding: 16,
+      backgroundColor: colors.surface,
+    },
+  });
+
   return (
     <View style={styles.container}>
-      <LinearGradient colors={["#10B981", "#059669"]} style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.text }]}>
         <SafeAreaView>
           <View style={styles.headerContent}>
             <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={24} color="#fff" />
+              <Ionicons name="close" size={24} color={colors.surface} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>
+            <Text style={[styles.headerTitle, { color: colors.surface }]}>
               {editData ? "Edit Product" : "Add Product"}
             </Text>
             <View style={{ width: 24 }} />
           </View>
         </SafeAreaView>
-      </LinearGradient>
+      </View>
 
       <ScrollView
         contentContainerStyle={{ paddingBottom: 80 }}
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        <Card animated style={styles.card}>
-          <Text style={styles.label}>Product Image</Text>
+        <View style={dynamicStyles.card}>
+          <Text style={[styles.label, { color: colors.text }]}>
+            Product Image
+          </Text>
           <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
             {image ? (
               <Image source={{ uri: image }} style={styles.selectedImage} />
             ) : (
               <View style={styles.imagePlaceholder}>
                 <Ionicons name="image-outline" size={36} color="#9CA3AF" />
-                <Text style={{ fontSize: 12, color: "#9CA3AF", marginTop: 6 }}>
+                <Text
+                  style={[
+                    styles.placeholderText,
+                    { color: colors.textSecondary },
+                  ]}
+                >
                   Tap to upload
                 </Text>
               </View>
@@ -160,6 +174,7 @@ export default function CreateProduct({
             value={name}
             onChangeText={setName}
             error={errors.name}
+            labelColor={colors.text}
           />
           <Input
             label="Description"
@@ -169,6 +184,7 @@ export default function CreateProduct({
             error={errors.description}
             multiline
             style={{ height: 80 }}
+            labelColor={colors.text}
           />
           <View style={{ flexDirection: "row", gap: 10 }}>
             <Input
@@ -179,6 +195,7 @@ export default function CreateProduct({
               keyboardType="numeric"
               error={errors.quantityKg}
               containerStyle={{ flex: 1 }}
+              labelColor={colors.text}
             />
             <Input
               label="Price per kg (₹)"
@@ -188,32 +205,31 @@ export default function CreateProduct({
               keyboardType="numeric"
               error={errors.pricePerKg}
               containerStyle={{ flex: 1 }}
+              labelColor={colors.text}
             />
           </View>
 
-          {/* <Button
-            title={loading ? "Saving..." : editData ? "Update Product" : "Create Product"}
-            onPress={handleSubmit}
-            loading={loading}
-            style={{ marginTop: 24 }}
-          /> */}
           <TouchableOpacity
-            style={[styles.button, loading && { opacity: 0.7 }]}
+            style={[
+              styles.button,
+              { backgroundColor: colors.primary },
+              loading && { opacity: 0.7 },
+            ]}
             onPress={handleSubmit}
             disabled={loading}
           >
-            <Text style={{ color: "white" }}>
+            <Text style={[styles.buttonText, { color: colors.text }]}>
               {loading ? "Saving..." : editData ? "Update" : "Submit"}
             </Text>
           </TouchableOpacity>
-        </Card>
+        </View>
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F9FAFB" },
+  container: { flex: 1 },
   scroll: { flex: 1 },
   header: { paddingBottom: 16 },
   headerContent: {
@@ -226,17 +242,18 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#fff",
   },
   card: {
     margin: 16,
-    padding: 20,
   },
   label: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#374151",
     marginBottom: 8,
+  },
+  placeholderText: {
+    fontSize: 12,
+    marginTop: 6,
   },
   imagePicker: {
     alignSelf: "center",
@@ -261,10 +278,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   button: {
-    backgroundColor: "green",
     padding: 12,
-    borderRadius: 4,
+    borderRadius: 8,
     alignItems: "center",
     marginTop: 16,
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

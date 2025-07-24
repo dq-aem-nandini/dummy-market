@@ -13,6 +13,11 @@ import {
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useDispatch } from "react-redux";
+import { clearBadge } from "@/store/badgeSlice";
+import { useFocusEffect } from "expo-router";
+import { useCallback } from "react";
+import { useDarkMode } from "@/app/context/DarkModeContext";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -26,6 +31,8 @@ import {
 } from "@/api/websocket";
 
 export default function ChatDetailScreen() {
+  const { colors } = useDarkMode();
+  const dispatch = useDispatch();
   const { receiverId, receiverName, productId } = useLocalSearchParams<{
     receiverId: string;
     receiverName: string;
@@ -43,6 +50,13 @@ export default function ChatDetailScreen() {
     initializeChat();
   }, []);
 
+  // Clear chat badge when entering specific chat
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(clearBadge('chat'));
+    }, [dispatch])
+  );
+
   const initializeChat = async () => {
     try {
       const userId = await AsyncStorage.getItem("userId");
@@ -51,21 +65,30 @@ export default function ChatDetailScreen() {
       if (userId && receiverId && productId) {
         await fetchChatHistory(receiverId, productId);
 
-        // Connect WebSocket
+        // Connect WebSocket with proper error handling
         connectWebSocket(() => {
           // Subscribe to this user's incoming messages
           subscribeChatToMessages(userId, (msg) => {
-            const received = JSON.parse(msg.body);
+            try {
+              const received = JSON.parse(msg.body);
 
-            // Filter messages based on receiver & product
-            if (
-              received.senderId === receiverId &&
-              received.productId === parseInt(productId)
-            ) {
-              setMessages((prev) => [...prev, received]);
-              setTimeout(() => {
-                flatListRef.current?.scrollToEnd({ animated: true });
-              }, 100);
+              // Filter messages based on receiver & product
+              if (
+                received.senderId === receiverId &&
+                received.productId === parseInt(productId)
+              ) {
+                setMessages((prev) => {
+                  // Avoid duplicate messages
+                  const exists = prev.some(m => m.id === received.id);
+                  if (exists) return prev;
+                  return [...prev, received];
+                });
+                setTimeout(() => {
+                  flatListRef.current?.scrollToEnd({ animated: true });
+                }, 100);
+              }
+            } catch (error) {
+              console.error("Error parsing WebSocket message:", error);
             }
           });
         });
@@ -175,14 +198,18 @@ export default function ChatDetailScreen() {
         <View
           style={[
             styles.messageBubble,
-            isCurrentUser ? styles.currentUserBubble : styles.otherUserBubble,
+            isCurrentUser 
+              ? [styles.currentUserBubble, { backgroundColor: colors.primary }]
+              : [styles.otherUserBubble, { backgroundColor: colors.surface }],
             !showAvatar && !isCurrentUser && styles.messageBubbleNoAvatar,
           ]}
         >
           <Text
             style={[
               styles.messageText,
-              isCurrentUser ? styles.currentUserText : styles.otherUserText,
+              isCurrentUser 
+                ? [styles.currentUserText, { color: colors.surface }]
+                : [styles.otherUserText, { color: colors.text }],
             ]}
           >
             {item.content}
@@ -190,7 +217,9 @@ export default function ChatDetailScreen() {
           <Text
             style={[
               styles.messageTime,
-              isCurrentUser ? styles.currentUserTime : styles.otherUserTime,
+              isCurrentUser 
+                ? [styles.currentUserTime, { color: `${colors.surface}CC` }]
+                : [styles.otherUserTime, { color: colors.textSecondary }],
             ]}
           >
             {new Date(item.timestamp).toLocaleTimeString([], {
@@ -204,13 +233,13 @@ export default function ChatDetailScreen() {
   };
 
   const renderHeader = () => (
-    <SafeAreaView style={styles.header}>
+    <SafeAreaView style={[styles.header, { backgroundColor: colors.headerBackground }]}>
       <View style={styles.headerContent}>
         <TouchableOpacity
           onPress={() => router.push("/(root)/(tabs)/chat")}
           style={styles.backButton}
         >
-          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+          <Ionicons name="arrow-back" size={24} color={colors.headerText} />
         </TouchableOpacity>
 
         <View style={styles.headerInfo}>
@@ -221,25 +250,29 @@ export default function ChatDetailScreen() {
             style={styles.headerAvatar}
           />
           <View>
-            <Text style={styles.headerName}>{receiverName}</Text>
-            <Text style={styles.headerStatus}>Online</Text>
+            <Text style={[styles.headerName, { color: colors.headerText }]}>
+              {receiverName}
+            </Text>
+            <Text style={[styles.headerStatus, { color: `${colors.headerText}CC` }]}>
+              Online
+            </Text>
           </View>
         </View>
 
         <TouchableOpacity style={styles.headerButton}>
-          <Ionicons name="call-outline" size={24} color="#FFFFFF" />
+          <Ionicons name="call-outline" size={24} color={colors.headerText} />
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 
   const renderInputArea = () => (
-    <View style={styles.inputContainer}>
-      <View style={styles.inputWrapper}>
+    <View style={[styles.inputContainer, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+      <View style={[styles.inputWrapper, { backgroundColor: colors.background }]}>
         <TextInput
-          style={styles.textInput}
+          style={[styles.textInput, { color: colors.text }]}
           placeholder="Type a message..."
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.textSecondary}
           value={newMessage}
           onChangeText={setNewMessage}
           multiline
@@ -251,13 +284,14 @@ export default function ChatDetailScreen() {
           disabled={!newMessage.trim() || sending}
           style={[
             styles.sendButton,
+            { backgroundColor: colors.primary },
             (!newMessage.trim() || sending) && styles.sendButtonDisabled,
           ]}
         >
           {sending ? (
-            <LoadingSpinner size="sm" color="#FFFFFF" />
+            <LoadingSpinner size="sm" color={colors.surface} />
           ) : (
-            <Ionicons name="send" size={20} color="#FFFFFF" />
+            <Ionicons name="send" size={20} color={colors.surface} />
           )}
         </TouchableOpacity>
       </View>
@@ -266,16 +300,18 @@ export default function ChatDetailScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <LoadingSpinner size="lg" />
-        <Text style={styles.loadingText}>Loading conversation...</Text>
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+          Loading conversation...
+        </Text>
       </View>
     );
   }
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       {renderHeader()}
@@ -293,8 +329,10 @@ export default function ChatDetailScreen() {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Ionicons name="chatbubbles-outline" size={48} color="#9CA3AF" />
-            <Text style={styles.emptyTitle}>Start the conversation</Text>
-            <Text style={styles.emptySubtitle}>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>
+              Start the conversation
+            </Text>
+            <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
               Send a message to begin chatting about the product
             </Text>
           </View>
@@ -309,10 +347,8 @@ export default function ChatDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
   },
   header: {
-    backgroundColor: "#8B5CF6",
     paddingBottom: 12,
   },
   headerContent: {
@@ -340,11 +376,9 @@ const styles = StyleSheet.create({
   headerName: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#FFFFFF",
   },
   headerStatus: {
     fontSize: 12,
-    color: "#E0E7FF",
     marginTop: 2,
   },
   headerButton: {
@@ -387,45 +421,33 @@ const styles = StyleSheet.create({
     marginLeft: 40,
   },
   currentUserBubble: {
-    backgroundColor: "#8B5CF6",
     borderBottomRightRadius: 6,
   },
   otherUserBubble: {
-    backgroundColor: "#FFFFFF",
     borderBottomLeftRadius: 6,
   },
   messageText: {
     fontSize: 16,
     lineHeight: 20,
   },
-  currentUserText: {
-    color: "#FFFFFF",
-  },
-  otherUserText: {
-    color: "#111827",
-  },
+  currentUserText: {},
+  otherUserText: {},
   messageTime: {
     fontSize: 11,
     marginTop: 4,
   },
   currentUserTime: {
-    color: "#E0E7FF",
     textAlign: "right",
   },
-  otherUserTime: {
-    color: "#9CA3AF",
-  },
+  otherUserTime: {},
   inputContainer: {
-    backgroundColor: "#FFFFFF",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
   },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "flex-end",
-    backgroundColor: "#F3F4F6",
     borderRadius: 24,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -433,12 +455,10 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     fontSize: 16,
-    color: "#111827",
     maxHeight: 100,
     paddingVertical: 8,
   },
   sendButton: {
-    backgroundColor: "#8B5CF6",
     width: 36,
     height: 36,
     borderRadius: 18,
@@ -453,12 +473,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F9FAFB",
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: "#6B7280",
   },
   emptyContainer: {
     flex: 1,
@@ -470,12 +488,10 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#374151",
     marginTop: 16,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: "#6B7280",
     marginTop: 8,
     textAlign: "center",
   },

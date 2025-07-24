@@ -35,7 +35,11 @@ export default function ProfileScreen() {
   const notifications = useSelector(
     (state: RootState) => state.notifications.notifications
   );
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  
+  // Use the new notifications count selector for consistency
+  const newNotificationsCount = useSelector(
+    (state: RootState) => state.notifications.notifications.filter(n => !n.isRead).length
+  );
 
   useEffect(() => {
     fetchUserProfile();
@@ -68,16 +72,18 @@ export default function ProfileScreen() {
   const dynamicStyles = StyleSheet.create({
     container: {
       flex: 1,
+     
     },
     content: {
       flex: 1,
+     
     },
     scrollContent: {
-      paddingBottom: 100,
+      paddingBottom: 20,
     },
     header: {
       paddingBottom: 20,
-      backgroundColor: "#8B5CF6",
+      backgroundColor: colors.headerBackground,
     },
     headerContent: {
       flexDirection: "row",
@@ -89,7 +95,7 @@ export default function ProfileScreen() {
     headerTitle: {
       fontSize: 28,
       fontWeight: "700",
-      color: "#FFFFFF",
+      color: colors.headerText,
     },
     logoutButton: {
       padding: 8,
@@ -97,7 +103,7 @@ export default function ProfileScreen() {
     userCard: {
       margin: 10,
       padding: 20,
-      backgroundColor: "#FFFFFF",
+      backgroundColor: colors.surface,
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.05,
@@ -124,24 +130,24 @@ export default function ProfileScreen() {
     userName: {
       fontSize: 20,
       fontWeight: "700",
-      color: "#111827",
+      color: colors.text,
       marginBottom: 4,
     },
     userHandle: {
       fontSize: 14,
-      color: "#8B5CF6",
+      color: colors.primary,
       marginBottom: 2,
     },
     userEmail: {
       fontSize: 14,
-      color: "#6B7280",
+      color: colors.textSecondary,
     },
     editButton: {
       alignSelf: "flex-start",
     },
     section: {
       marginHorizontal: 16,
-      marginBottom: 24,
+      // marginBottom: 24,
     },
     sectionTitle: {
       fontSize: 18,
@@ -151,7 +157,7 @@ export default function ProfileScreen() {
     },
     menuCard: {
       padding: 0,
-      backgroundColor: "#FFFFFF",
+      backgroundColor: colors.surface,
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.05,
@@ -176,7 +182,7 @@ export default function ProfileScreen() {
       width: 32,
       height: 32,
       borderRadius: 16,
-      backgroundColor: "#F9FAFB",
+      backgroundColor: colors.background,
       alignItems: "center",
       justifyContent: "center",
       marginRight: 12,
@@ -184,7 +190,7 @@ export default function ProfileScreen() {
     menuItemText: {
       fontSize: 16,
       fontWeight: "500",
-      color: "#111827",
+      color: colors.text,
       flex: 1,
     },
     badge: {
@@ -203,12 +209,12 @@ export default function ProfileScreen() {
     },
     separator: {
       height: 1,
-      backgroundColor: "#E5E7EB",
+      backgroundColor: colors.border,
       marginLeft: 60,
     },
     statusCard: {
       padding: 16,
-      backgroundColor: "#FFFFFF",
+      backgroundColor: colors.surface,
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.05,
@@ -256,12 +262,12 @@ export default function ProfileScreen() {
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
-      backgroundColor: "#F9FAFB",
+      backgroundColor: colors.background,
     },
     loadingText: {
       marginTop: 16,
       fontSize: 16,
-      color: "#6B7280",
+      color: colors.textSecondary,
     },
     modalOverlay: {
       flex: 1,
@@ -271,7 +277,7 @@ export default function ProfileScreen() {
       paddingHorizontal: 20,
     },
     modalContent: {
-      backgroundColor: "#FFFFFF",
+      backgroundColor: colors.surface,
       borderRadius: 20,
       padding: 24,
       width: "100%",
@@ -284,13 +290,13 @@ export default function ProfileScreen() {
     modalTitle: {
       fontSize: 20,
       fontWeight: "700",
-      color: "#111827",
+      color: colors.text,
       marginTop: 12,
       marginBottom: 8,
     },
     modalSubtitle: {
       fontSize: 14,
-      color: "#6B7280",
+      color: colors.textSecondary,
       textAlign: "center",
       lineHeight: 20,
     },
@@ -339,10 +345,10 @@ export default function ProfileScreen() {
       </View>
 
       <TouchableOpacity
-        className="bg-green-600 px-5 py-2 rounded-full mt-4 w-1/2 items-center"
+        style={[styles.editProfileButton, { backgroundColor: colors.primary }]}
         onPress={() => router.push("/profile/edit-profile")}
       >
-        <Text className="text-white font-medium">Edit Profile</Text>
+        <Text style={[styles.editProfileButtonText, { color: colors.surface }]}>Edit Profile</Text>
       </TouchableOpacity>
     </View>
   );
@@ -362,8 +368,8 @@ export default function ProfileScreen() {
                 <Switch
                   value={item.value}
                   onValueChange={item.onToggle}
-                  trackColor={{ false: colors.border, true: colors.primary }}
-                  thumbColor={item.value ? "#FFFFFF" : colors.background}
+                  trackColor={{ false: colors.border, true: `${colors.primary}80` }}
+                  thumbColor={item.value ? colors.primary : colors.textSecondary}
                 />
               </View>
             ) : (
@@ -485,16 +491,16 @@ export default function ProfileScreen() {
     {
       icon: <FontAwesome name="bell-o" size={20} color={colors.primary} />,
       label: "Notifications",
-      badge: unreadCount > 0 ? unreadCount : undefined,
+      badge: newNotificationsCount > 0 ? newNotificationsCount : undefined,
       onPress: () => router.push("/(root)/profile/notifications"),
     },
-    // {
-    //   type: 'switch',
-    //   icon: <Ionicons name="moon-outline" size={20} color={colors.primary} />,
-    //   label: 'Dark Mode',
-    //   value: isDarkMode,
-    //   onToggle: toggleDarkMode,
-    // },
+    {
+      type: 'switch',
+      icon: <Ionicons name="moon-outline" size={20} color={colors.primary} />,
+      label: 'Dark Mode',
+      value: isDarkMode,
+      onToggle: toggleDarkMode,
+    },
     {
       icon: (
         <Ionicons name="lock-closed-outline" size={20} color={colors.primary} />
@@ -505,7 +511,7 @@ export default function ProfileScreen() {
   ];
 
   return (
-    <View style={dynamicStyles.container}>
+    <View style={[dynamicStyles.container, { backgroundColor: colors.background }]}>
       <ScrollView
         style={dynamicStyles.content}
         contentContainerStyle={dynamicStyles.scrollContent}
@@ -538,6 +544,8 @@ function SignOutModal({
   onClose: () => void;
   onSignOut: () => void;
 }) {
+  const { colors } = useDarkMode();
+
   return (
     <Modal
       visible={visible}
@@ -545,26 +553,26 @@ function SignOutModal({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <View className="flex-1 justify-center items-center bg-black/40 px-4">
-        <View className="bg-white rounded-xl p-6 w-full max-w-sm">
-          <Text className="text-lg font-bold mb-6 text-center">
+      <View style={styles.modalOverlay}>
+        <View style={[styles.signOutModalContent, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.signOutModalTitle, { color: colors.text }]}>
             Are you sure you want to sign out?
           </Text>
-          <View className="flex-row justify-between">
+          <View style={styles.signOutModalButtons}>
             <TouchableOpacity
               onPress={onClose}
-              className="flex-1 py-3 border border-gray-300 rounded-lg mr-2 items-center"
+              style={[styles.signOutCancelButton, { borderColor: colors.border }]}
             >
-              <Text className="text-gray-700 font-medium">Cancel</Text>
+              <Text style={[styles.signOutCancelButtonText, { color: colors.text }]}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => {
                 onClose();
                 onSignOut();
               }}
-              className="flex-1 py-3 bg-red-600 rounded-lg ml-2 items-center"
+              style={styles.signOutConfirmButton}
             >
-              <Text className="text-white font-medium">Sign Out</Text>
+              <Text style={styles.signOutConfirmButtonText}>Sign Out</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -572,3 +580,62 @@ function SignOutModal({
     </Modal>
   );
 }
+
+const styles = StyleSheet.create({
+  editProfileButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginTop: 16,
+    alignSelf: 'flex-start',
+  },
+  editProfileButtonText: {
+    fontWeight: '500',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    paddingHorizontal: 16,
+  },
+  signOutModalContent: {
+    borderRadius: 12,
+    padding: 24,
+    width: '100%',
+    maxWidth: 320,
+  },
+  signOutModalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  signOutModalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  signOutCancelButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderRadius: 8,
+    marginRight: 8,
+    alignItems: 'center',
+  },
+  signOutCancelButtonText: {
+    fontWeight: '500',
+  },
+  signOutConfirmButton: {
+    flex: 1,
+    paddingVertical: 12,
+    backgroundColor: '#EF4444',
+    borderRadius: 8,
+    marginLeft: 8,
+    alignItems: 'center',
+  },
+  signOutConfirmButtonText: {
+    color: 'white',
+    fontWeight: '500',
+  },
+});

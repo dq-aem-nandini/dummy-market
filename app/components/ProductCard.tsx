@@ -3,6 +3,7 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { ProductDTO } from "@/api/types";
+import { useDarkMode } from "../context/DarkModeContext";
 
 interface ProductCardProps {
   product: ProductDTO;
@@ -21,9 +22,26 @@ const ProductCard: React.FC<ProductCardProps> = ({
   isOwner = false,
   delay = 0,
 }) => {
+  const { colors } = useDarkMode();
+  const dynamicStyles = StyleSheet.create({
+    menuCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 12,
+      marginHorizontal: 16,
+      backgroundColor: colors.surface,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      elevation: 2,
+      borderRadius: 12,
+      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+    },
+  });
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
-      <View style={styles.card}>
+      <View style={dynamicStyles.menuCard}>
         <View style={styles.content}>
           {/* Product Image with Stock Badge */}
           <View style={styles.imageContainer}>
@@ -44,7 +62,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
           {/* Product Info */}
           <View style={styles.info}>
-            <Text style={styles.title} numberOfLines={2}>
+            <Text
+              style={[styles.title, { color: colors.text }]}
+              numberOfLines={2}
+            >
               {product.name}
             </Text>
             <Text style={styles.description} numberOfLines={2}>
@@ -52,8 +73,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             </Text>
 
             <View style={styles.priceContainer}>
-              <Text style={styles.price}>₹{product.pricePerKg}</Text>
-              <Text style={styles.priceUnit}>/kg</Text>
+              <Text style={styles.price}>₹{product.pricePerKg}/kg</Text>
             </View>
 
             <View style={styles.statusContainer}>
@@ -116,19 +136,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
 };
 
 const styles = StyleSheet.create({
-  card: {
-    flexDirection: "row",
-    backgroundColor: "white",
-    marginHorizontal: 16,
-    marginVertical: 8,
-    padding: 12,
-    borderRadius: 8,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    alignItems: "center",
-  },
   content: {
     flexDirection: "row",
     alignItems: "center",
@@ -206,7 +213,7 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     alignItems: "center",
-    gap: 8,
+    gap: 15,
   },
   chatButton: {
     backgroundColor: "#6B7280",
