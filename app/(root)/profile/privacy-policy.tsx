@@ -2,11 +2,12 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-nati
 import { useEffect, useState } from "react";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import AnimatedCard from "@/app/components/ui/AnimatedCard";
+import { useDarkMode } from "@/app/context/DarkModeContext";
+
 
 export default function PrivacyPolicyScreen() {
   const [policyText, setPolicyText] = useState<string>("");
-
+ const {  colors } = useDarkMode();
   useEffect(() => {
     // In a real app, you could fetch this from the backend
     setPolicyText(`
@@ -32,7 +33,7 @@ export default function PrivacyPolicyScreen() {
   }, []);
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.push("/(root)/(tabs)/profile")}>
           <Ionicons name="arrow-back" size={24} color="black" />
@@ -40,11 +41,11 @@ export default function PrivacyPolicyScreen() {
         <Text style={styles.title}>Privacy Policy</Text>
       </View>
 
-      <AnimatedCard style={styles.contentCard}>
+      <View style={styles.contentCard}>
         <Text style={styles.content}>
           {policyText}
         </Text>
-      </AnimatedCard>
+      </View>
     </ScrollView>
   );
 }

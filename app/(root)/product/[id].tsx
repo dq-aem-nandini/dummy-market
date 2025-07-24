@@ -29,7 +29,7 @@ import { useDarkMode } from "@/app/context/DarkModeContext";
 import Input from "@/app/components/ui/Input";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 import Constants from "expo-constants";
-import AnimatedCard from "@/app/components/ui/AnimatedCard";
+
 
 const BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl;
 
@@ -537,7 +537,7 @@ export default function ProductDetail() {
         </View>
 
         {/* Product Info */}
-        <AnimatedCard style={styles.productInfoCard}>
+        <View style={styles.productInfoCard}>
           <Text style={[styles.productTitle, { color: colors.text }]}>
             {product.name}
           </Text>
@@ -597,11 +597,11 @@ export default function ProductDetail() {
               </View>
             )}
           </View>
-        </AnimatedCard>
+        </View>
 
         {/* Action Buttons */}
         {!isOwner && (
-          <AnimatedCard style={styles.actionCard}>
+          <View style={styles.actionCard}>
             <View style={styles.actionButtons}>
               {/* <Button
                 title="Order Now"
@@ -637,11 +637,11 @@ export default function ProductDetail() {
                 </Text>
               </TouchableOpacity>
             </View>
-          </AnimatedCard>
+          </View>
         )}
 
         {/* Reviews Section */}
-        <AnimatedCard style={styles.reviewsSection}>
+        <View style={styles.reviewsSection}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
               Customer Reviews
@@ -660,11 +660,11 @@ export default function ProductDetail() {
             scrollEnabled={false}
             showsVerticalScrollIndicator={false}
           />
-        </AnimatedCard>
+        </View>
 
         {/* Similar Products */}
         {similarProducts.length > 0 && (
-          <AnimatedCard style={styles.similarSection}>
+          <View style={styles.similarSection}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
               Similar Products
             </Text>
@@ -676,7 +676,7 @@ export default function ProductDetail() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.similarProductsList}
             />
-          </AnimatedCard>
+          </View>
         )}
       </ScrollView>
 

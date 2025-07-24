@@ -2,7 +2,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import React from "react";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import AnimatedCard from "@/app/components/ui/AnimatedCard";
+
 
 export default function wishtlist() {
   return (
@@ -14,7 +14,7 @@ export default function wishtlist() {
         <Text style={styles.headerText}>Wishlist</Text>
       </View>
       
-      <AnimatedCard style={styles.emptyCard}>
+      <View style={styles.emptyCard}>
         <View style={styles.emptyContent}>
           <Ionicons name="heart-outline" size={48} color="#9CA3AF" />
           <Text style={styles.emptyTitle}>No items in wishlist</Text>
@@ -22,7 +22,7 @@ export default function wishtlist() {
             Products you save will appear here
           </Text>
         </View>
-      </AnimatedCard>
+      </View>
     </View>
   );
 }

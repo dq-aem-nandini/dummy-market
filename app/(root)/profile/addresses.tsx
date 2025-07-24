@@ -1,7 +1,7 @@
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import AnimatedCard from "@/app/components/ui/AnimatedCard";
+
 import { useDarkMode } from "@/app/context/DarkModeContext";
 
 const mockAddresses = [
@@ -18,26 +18,44 @@ const mockAddresses = [
 ];
 
 export default function AddressesScreen() {
-  const { isDarkMode, toggleDarkMode, colors } = useDarkMode();
+  const {  colors } = useDarkMode();
+  const dynamicStyles = StyleSheet.create({
+    addressCard: {
+      marginBottom: 12,
+      marginHorizontal: 0,
+      backgroundColor: colors.surface,
+      padding: 12,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      elevation: 2,
+      borderRadius: 12,
+      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+    },
+  
+  })
   return (
-    <View style={styles.container}>
+    
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.push("/(root)/(tabs)/profile")}>
-          <Ionicons name="arrow-back" size={24} color="black" />
+          <Ionicons name="arrow-back" size={24} color={colors.text}/>
         </TouchableOpacity>
-        <Text style={styles.title}>Saved Addresses</Text>
+        
+        <Text style={[styles.title, { color: colors.text }]}>Saved Addresses</Text>
       </View>
 
       <FlatList
         data={mockAddresses}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <AnimatedCard style={styles.addressCard}>
+          <View style={dynamicStyles.addressCard}>
          
             <Text style={[styles.addressLabel, { color: colors.text }]}>{item.label}  </Text>
       
             <Text style={[styles.addressText, { color: colors.text }]}>{item.address}</Text>
-          </AnimatedCard>
+          </View>
         )}
       />
 
@@ -51,7 +69,6 @@ export default function AddressesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
     padding: 16,
   },
   header: {
@@ -64,10 +81,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginLeft: 12,
   },
-  addressCard: {
-    marginBottom: 12,
-    marginHorizontal: 0,
-  },
+ 
   addressLabel: {
     fontSize: 16,
     fontWeight: "600",

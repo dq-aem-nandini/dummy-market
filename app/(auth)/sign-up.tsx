@@ -10,14 +10,13 @@ import {
   Platform,
   SafeAreaView,
 } from "react-native";
-import { MotiView } from "moti";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-
 import { useAuth } from "../context/AuthContext";
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
+import { useDarkMode } from "../context/DarkModeContext";
 
 export default function SignUpScreen() {
   const { register, loading } = useAuth();
@@ -36,7 +35,7 @@ export default function SignUpScreen() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
+ const { colors } = useDarkMode();
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -101,26 +100,20 @@ export default function SignUpScreen() {
   };
 
   const renderHeader = () => (
-    <MotiView
-      from={{ opacity: 0, translateY: -30 }}
-      animate={{ opacity: 1, translateY: 0 }}
-      transition={{ type: "spring", damping: 15, stiffness: 100 }}
-      style={styles.headerContainer}
-    >
-      <LinearGradient colors={["#10B981", "#059669"]} style={styles.header}>
-        <SafeAreaView>
-          <View style={styles.headerContent}>
-            <Text style={styles.title}>Create Account 🌱</Text>
-            <Text style={styles.subtitle}>
-              Join the seed marketplace community
-            </Text>
-          </View>
-        </SafeAreaView>
-      </LinearGradient>
-    </MotiView>
+    <LinearGradient colors={["#10B981", "#059669"]} style={styles.header}>
+      <View>
+        <View style={styles.headerContent}>
+          <Text style={styles.title}>Create Account 🌱</Text>
+          <Text style={styles.subtitle}>
+            Join the seed marketplace community
+          </Text>
+        </View>
+      </View>
+    </LinearGradient>
   );
 
   return (
+    
     <View style={styles.container}>
       {renderHeader()}
 
@@ -133,7 +126,7 @@ export default function SignUpScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <Card animated delay={0.2} style={styles.formCard}>
+          <Card  style={styles.formCard}>
             <View style={styles.form}>
               <Input
                 label="Full Name"
@@ -144,6 +137,7 @@ export default function SignUpScreen() {
                 }
                 error={errors.name}
                 leftIcon="person-outline"
+                labelColor={colors.text}
               />
 
               <Input
@@ -156,6 +150,7 @@ export default function SignUpScreen() {
                 error={errors.userName}
                 leftIcon="at-outline"
                 autoCapitalize="none"
+                labelColor={colors.text}
               />
 
               <Input
@@ -169,6 +164,7 @@ export default function SignUpScreen() {
                 leftIcon="mail-outline"
                 keyboardType="email-address"
                 autoCapitalize="none"
+                labelColor={colors.text}
               />
 
               <Input
@@ -182,6 +178,7 @@ export default function SignUpScreen() {
                 leftIcon="call-outline"
                 keyboardType="numeric"
                 maxLength={10}
+                labelColor={colors.text}
               />
 
               <Input
@@ -195,6 +192,7 @@ export default function SignUpScreen() {
                 leftIcon="card-outline"
                 keyboardType="numeric"
                 maxLength={12}
+                labelColor={colors.text}
               />
 
               <Input
@@ -210,6 +208,7 @@ export default function SignUpScreen() {
                 onRightIconPress={() => setShowPassword(!showPassword)}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
+                labelColor={colors.text}
               />
 
               <Input
@@ -229,6 +228,7 @@ export default function SignUpScreen() {
                 }
                 secureTextEntry={!showConfirmPassword}
                 autoCapitalize="none"
+                labelColor={colors.text}
               />
 
               <TouchableOpacity
@@ -243,7 +243,8 @@ export default function SignUpScreen() {
                 >
                   {agreeToTerms && <Text style={styles.checkmark}>✓</Text>}
                 </View>
-                <Text style={styles.checkboxText}>
+      
+                <Text style={[styles.checkboxText, { color: colors.text }]}>
                   I agree to the Terms and Conditions
                 </Text>
               </TouchableOpacity>
@@ -259,13 +260,13 @@ export default function SignUpScreen() {
               />
 
               <View style={styles.signInContainer}>
-                <Text style={styles.signInText}>Already have an account? </Text>
-                <Button
-                  title="Sign In"
-                  variant="ghost"
-                  size="sm"
+                <Text style={[styles.signInText, { color: colors.text }]}>Already have an account? </Text>
+                <TouchableOpacity
                   onPress={() => router.push("/(auth)/sign-in")}
-                />
+                >
+                  <Text style={styles.signInLink}>Sign In</Text>  
+                </TouchableOpacity>
+
               </View>
             </View>
           </Card>
@@ -284,11 +285,12 @@ const styles = StyleSheet.create({
     marginBottom: -20,
   },
   header: {
-    paddingBottom: 40,
+    paddingTop: 20,
+    paddingBottom: 10,
   },
   headerContent: {
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 15,
     alignItems: "center",
   },
   title: {
@@ -296,7 +298,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#FFFFFF",
     textAlign: "center",
-    marginBottom: 8,
+    marginBottom: 0,
   },
   subtitle: {
     fontSize: 16,
@@ -310,19 +312,19 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 20,
-    paddingTop: 40,
-    paddingBottom: 40,
+    paddingTop: 0,
+    paddingBottom: 10,
   },
   formCard: {
-    marginTop: 20,
+    marginTop:10,
   },
   form: {
-    gap: 16,
+    gap: 0,
   },
   checkboxContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 8,
+
   },
   checkbox: {
     width: 20,
@@ -367,5 +369,10 @@ const styles = StyleSheet.create({
   signInText: {
     fontSize: 16,
     color: "#6B7280",
+  },
+  signInLink: {
+    fontSize: 16,
+    color: "#8B5CF6",
+    fontWeight: "600",
   },
 });

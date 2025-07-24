@@ -23,7 +23,7 @@ import { ChatConversation, UserModel } from "@/api/types";
 
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 import Input from "@/app/components/ui/Input";
-import AnimatedCard from "@/app/components/ui/AnimatedCard";
+
 
 interface ChatUser {
   id: string;
@@ -140,7 +140,7 @@ export default function ChatScreen() {
     index: number;
   }) => (
     <TouchableOpacity onPress={() => handleChatPress(item)} activeOpacity={0.7}>
-      <AnimatedCard style={styles.chatItem}>
+      <View style={styles.chatItem}>
         <View style={styles.chatContent}>
           <View style={styles.avatarContainer}>
             <Image
@@ -182,7 +182,7 @@ export default function ChatScreen() {
 
           <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
         </View>
-      </AnimatedCard>
+      </View>
     </TouchableOpacity>
   );
 
@@ -235,7 +235,7 @@ export default function ChatScreen() {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <AnimatedCard style={styles.emptyCard}>
+          <View style={styles.emptyCard}>
             <View style={styles.emptyContent}>
               <Ionicons name="chatbubbles-outline" size={48} color="#9CA3AF" />
               <Text style={[styles.emptyTitle, { color: colors.text }]}>
@@ -245,7 +245,7 @@ export default function ChatScreen() {
                 Start chatting with sellers to negotiate prices
               </Text>
             </View>
-          </AnimatedCard>
+          </View>
         }
       />
     </View>

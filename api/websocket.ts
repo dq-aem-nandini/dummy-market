@@ -6,7 +6,7 @@ import { logger } from "@/utils/logger";
 
 let stompClient: Client | null = null;
 
-const WS_URL = `http://192.168.1.27:8081/ws`;
+const WS_URL = `http://192.168.1.28:8081/ws`;
 
 /**
  * Connect to WebSocket server using SockJS and STOMP
@@ -22,8 +22,6 @@ export const connectWebSocket = (onReady: () => void) => {
     webSocketFactory: () => socket,
     debug: (str) => logger.debug("WebSocket Debug", str),
     reconnectDelay: 5000,
-    heartbeatIncoming: 4000,
-    heartbeatOutgoing: 4000,
     onConnect: () => {
       logger.wsConnect(WS_URL);
       onReady(); // trigger subscriptions

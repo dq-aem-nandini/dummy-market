@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
-import AnimatedCard from "@/app/components/ui/AnimatedCard";
+
 import { useDarkMode } from "@/app/context/DarkModeContext";
 
 const mockCards = [
@@ -22,28 +22,46 @@ const mockCards = [
 ];
 
 export default function PaymentScreen() {
-  const { isDarkMode, toggleDarkMode, colors } = useDarkMode();
+
+  const {  colors } = useDarkMode();
+  const dynamicStyles = StyleSheet.create({
+    cardItem: {
+      fontSize: 16,
+      fontWeight: "600",
+      marginBottom: 10,
+      marginHorizontal: 0,
+      backgroundColor: colors.surface,
+      padding: 12,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      elevation: 2,
+      borderRadius: 12,
+      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+    },
+  })
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.push("/(root)/(tabs)/profile")}>
-          <Ionicons name="arrow-back" size={24} color="black" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.title}>Saved Cards</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Saved Cards</Text>
       </View>
 
       <FlatList
         data={mockCards}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <AnimatedCard style={styles.cardItem}>
+          <View style={dynamicStyles.cardItem}>
             <Text style={[styles.cardTitle, { color: colors.text }]}>
               {item.type} **** {item.last4}
             </Text>
             <Text style={[styles.cardExpiry, { color: colors.text }]}>
               Expiry: {item.expiryMonth}/{item.expiryYear}
             </Text>
-          </AnimatedCard>
+          </View>
         )}
       />
       <TouchableOpacity style={styles.addButton}>

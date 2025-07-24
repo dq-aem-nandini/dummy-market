@@ -18,14 +18,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSelector } from "react-redux";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
 
-import { selectNewNotificationsCount } from "@/store/notificationSlice";
+// import { selectNewNotificationsCount } from "@/store/notificationSlice";
 import useFetch from "@/hooks/useFetch";
 import { RootState } from "@/store";
 import ProductCard from "@/app/components/ProductCard";
 
 import Input from "@/app/components/ui/Input";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
-import AnimatedCard from "@/app/components/ui/AnimatedCard";
+
 
 export default function Home() {
   const { colors } = useDarkMode();
@@ -237,7 +237,15 @@ export default function Home() {
       </View>
     );
   }
-
+  const dynamicStyles = StyleSheet.create({
+    modalContent: {
+      width: "100%",
+      backgroundColor: colors.surface,
+      borderRadius: 10,
+      padding: 16,
+      elevation: 5,
+    },
+  })
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
@@ -265,7 +273,7 @@ export default function Home() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         ListEmptyComponent={
-          <AnimatedCard style={styles.emptyCard}>
+          <View style={styles.emptyCard}>
             <View style={styles.emptyContent}>
               <Ionicons name="leaf-outline" size={48} color="#9CA3AF" />
               <Text style={[styles.emptyTitle, { color: colors.text }]}>
@@ -275,7 +283,7 @@ export default function Home() {
                 Try adjusting your search or filters
               </Text>
             </View>
-          </AnimatedCard>
+          </View>
         }
       />
 
@@ -287,7 +295,7 @@ export default function Home() {
         onRequestClose={() => setPriceModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <AnimatedCard style={styles.modalContent}>
+          <View style={dynamicStyles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>
                 Filter by Price
@@ -335,7 +343,7 @@ export default function Home() {
                 Apply Filter
               </Text>
             </TouchableOpacity>
-          </AnimatedCard>
+          </View>
         </View>
       </Modal>
 
@@ -347,7 +355,7 @@ export default function Home() {
         onRequestClose={() => setRequestModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <AnimatedCard style={styles.modalContent}>
+          <View style={dynamicStyles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>
                 Request Product
@@ -377,6 +385,7 @@ export default function Home() {
                     value={inputQty}
                     onChangeText={setInputQty}
                     containerStyle={styles.quantityInput}
+                    labelColor={colors.text}
                   />
 
                   <View style={styles.unitButtons}>
@@ -392,7 +401,7 @@ export default function Home() {
                         style={[
                           styles.unitButtonText,
                           { color: colors.textSecondary },
-                          unit === "kg" && { color: colors.surface },
+                          unit === "kg" && { color: colors.text },
                         ]}
                       >
                         Kg
@@ -446,7 +455,7 @@ export default function Home() {
                 </TouchableOpacity>
               </>
             )}
-          </AnimatedCard>
+          </View>
         </View>
       </Modal>
     </View>
@@ -569,10 +578,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
   },
-  modalContent: {
-    width: "100%",
-    maxWidth: 400,
-  },
+  // modalContent: {
+  //   width: "100%",
+  //   maxWidth: 400,
+  // },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",

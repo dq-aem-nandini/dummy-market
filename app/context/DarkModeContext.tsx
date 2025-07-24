@@ -8,6 +8,9 @@ interface DarkModeContextProps {
   colorScheme: ColorSchemeName;
   colors: {
     background: string;
+    loginBackground: readonly [string, string, ...string[]];
+
+
     surface: string;
     text: string;
     textSecondary: string;
@@ -16,13 +19,13 @@ interface DarkModeContextProps {
     card: string;
     headerBackground: string;
     headerText: string;
-    badgeBackground: string;  
-    badgeText: string;  
-    tabBarBackground: string;   
-    tabBarBorder: string;       
-    tabBarActive: string;      
-    tabBarInactive: string;   
-    textPrimary: string;   
+    badgeBackground: string;
+    badgeText: string;
+    tabBarBackground: string;
+    tabBarBorder: string;
+    tabBarActive: string;
+    tabBarInactive: string;
+    textPrimary: string;
   };
 }
 
@@ -43,6 +46,7 @@ const lightColors = {
   tabBarInactive: "#6B7280",
   badgeBackground: "#EF4444",
   badgeText: "#FFFFFF",
+  loginBackground: ["#1E1B4B", "#312E81", "#4C1D95"] as const,
 };
 
 const darkColors = {
@@ -62,6 +66,7 @@ const darkColors = {
   tabBarInactive: "#9CA3AF",
   badgeBackground: "#EF4444",
   badgeText: "#FFFFFF",
+  loginBackground: [ "#1F2937","#9f9ca6","#1F2937",] as const,
 };
 
 const DarkModeContext = createContext<DarkModeContextProps>(
@@ -81,9 +86,9 @@ export const DarkModeProvider = ({
   useEffect(() => {
     // Load saved preference
     loadDarkModePreference();
-    
+
     // Update StatusBar when dark mode changes
-    StatusBar.setBarStyle(isDarkMode ? 'light-content' : 'dark-content', true);
+    StatusBar.setBarStyle(isDarkMode ? "light-content" : "dark-content", true);
 
     // Listen to system changes
     const subscription = Appearance.addChangeListener(({ colorScheme }) => {
@@ -125,7 +130,7 @@ export const DarkModeProvider = ({
     try {
       const newMode = !isDarkMode;
       setIsDarkMode(newMode);
-      StatusBar.setBarStyle(newMode ? 'light-content' : 'dark-content', true);
+      StatusBar.setBarStyle(newMode ? "light-content" : "dark-content", true);
       await AsyncStorage.setItem("darkModePreference", JSON.stringify(newMode));
     } catch (error) {
       console.error("Error saving dark mode preference:", error);

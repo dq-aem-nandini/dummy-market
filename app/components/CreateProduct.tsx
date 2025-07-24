@@ -11,11 +11,11 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import { MotiView } from "moti";
+
 import Constants from "expo-constants";
 
 import Input from "./ui/Input";
-import AnimatedCard from "./ui/AnimatedCard";
+
 import { createProduct, updateProduct } from "@/api/services";
 import { useDarkMode } from "@/app/context/DarkModeContext";
 
@@ -118,15 +118,22 @@ export default function CreateProduct({
     }
   };
 
+  const dynamicStyles = StyleSheet.create({
+    card: {
+      padding: 16,
+      backgroundColor: colors.surface,
+    },
+  });
+
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { backgroundColor: colors.headerBackground }]}>
+      <View style={[styles.header, { backgroundColor: colors.text }]}>
         <SafeAreaView>
           <View style={styles.headerContent}>
             <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={24} color={colors.headerText} />
+              <Ionicons name="close" size={24} color={colors.surface} />
             </TouchableOpacity>
-            <Text style={[styles.headerTitle, { color: colors.headerText }]}>
+            <Text style={[styles.headerTitle, { color: colors.surface }]}>
               {editData ? "Edit Product" : "Add Product"}
             </Text>
             <View style={{ width: 24 }} />
@@ -139,15 +146,22 @@ export default function CreateProduct({
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        <AnimatedCard style={styles.card}>
-          <Text style={[styles.label, { color: colors.text }]}>Product Image</Text>
+        <View style={dynamicStyles.card}>
+          <Text style={[styles.label, { color: colors.text }]}>
+            Product Image
+          </Text>
           <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
             {image ? (
               <Image source={{ uri: image }} style={styles.selectedImage} />
             ) : (
               <View style={styles.imagePlaceholder}>
                 <Ionicons name="image-outline" size={36} color="#9CA3AF" />
-                <Text style={[styles.placeholderText, { color: colors.textSecondary }]}>
+                <Text
+                  style={[
+                    styles.placeholderText,
+                    { color: colors.textSecondary },
+                  ]}
+                >
                   Tap to upload
                 </Text>
               </View>
@@ -195,14 +209,12 @@ export default function CreateProduct({
             />
           </View>
 
-          {/* <Button
-            title={loading ? "Saving..." : editData ? "Update Product" : "Create Product"}
-            onPress={handleSubmit}
-            loading={loading}
-            style={{ marginTop: 24 }}
-          /> */}
           <TouchableOpacity
-            style={[styles.button, { backgroundColor: colors.primary }, loading && { opacity: 0.7 }]}
+            style={[
+              styles.button,
+              { backgroundColor: colors.primary },
+              loading && { opacity: 0.7 },
+            ]}
             onPress={handleSubmit}
             disabled={loading}
           >
@@ -210,7 +222,7 @@ export default function CreateProduct({
               {loading ? "Saving..." : editData ? "Update" : "Submit"}
             </Text>
           </TouchableOpacity>
-        </AnimatedCard>
+        </View>
       </ScrollView>
     </View>
   );

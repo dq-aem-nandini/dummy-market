@@ -17,7 +17,6 @@ import useFetch from "@/hooks/useFetch";
 import CreateProduct from "@/app/components/CreateProduct";
 import { useRouter } from "expo-router"; // ✅ Import router
 import { useDarkMode } from "@/app/context/DarkModeContext";
-import AnimatedCard from "@/app/components/ui/AnimatedCard";
 
 import Constants from "expo-constants";
 const BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl;
@@ -60,10 +59,26 @@ export default function Products() {
     setEditProduct(null);
     refetch();
   };
-
+  const dynamicStyles = StyleSheet.create({
+    menuCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 12,
+      backgroundColor: colors.surface,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      elevation: 2,
+      borderRadius: 12,
+      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+    },
+  });
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { backgroundColor: colors.headerBackground }]}>
+      <View
+        style={[styles.header, { backgroundColor: colors.headerBackground }]}
+      >
         <View>
           <Text style={[styles.title, { color: colors.headerText }]}>
             My Products
@@ -125,94 +140,106 @@ export default function Products() {
             <TouchableOpacity
               style={styles.cardContainer}
               activeOpacity={0.9}
-              onPress={() => router.push(`/product/${item.id}`)}
+              onPress={() => router.push(`/myproducts/${item.id}`)}
             >
-            <AnimatedCard style={styles.card}>
-              {/* Image section */}
-              <View style={styles.imageContainer}>
-                <Image
-                  source={{
-                    uri: item.image
-                      ? `${BASE_URL}/${item.image}`
-                      : "https://images.pexels.com/photos/1459339/pexels-photo-1459339.jpeg?auto=compress&cs=tinysrgb&w=400",
-                  }}
-                  style={styles.productImage}
-                />
+              <View style={dynamicStyles.menuCard}>
+                {/* Image section */}
+                <View style={styles.imageContainer}>
+                  <Image
+                    source={{
+                      uri: item.image
+                        ? `${BASE_URL}/${item.image}`
+                        : "https://images.pexels.com/photos/1459339/pexels-photo-1459339.jpeg?auto=compress&cs=tinysrgb&w=400",
+                    }}
+                    style={styles.productImage}
+                  />
 
-                {/* Stock badge (bottom-right of image) */}
-                <View style={styles.stockBadge}>
-                  <Text style={styles.stockText}>{item.quantityKg} kg</Text>
-                </View>
-              </View>
-
-              {/* Content section */}
-              <View style={styles.cardContent}>
-                <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={2}>
-                  {item.name}
-                </Text>
-                <Text style={[styles.cardDesc, { color: colors.textSecondary }]} numberOfLines={2}>
-                  {item.description}
-                </Text>
-
-                <View style={styles.priceContainer}>
-                  <Text style={[styles.cardPrice, { color: colors.primary }]}>
-                    ₹ {item.pricePerKg} /kg
-                  </Text>
-                </View>
-
-                <View style={styles.statusContainer}>
-                  <View
-                    style={[
-                      styles.statusBadge,
-                      item.remainingQuantityKg > 0
-                        ? styles.availableBadge
-                        : styles.outOfStockBadge,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.statusText,
-                        item.remainingQuantityKg > 0
-                          ? styles.availableText
-                          : styles.outOfStockText,
-                      ]}
-                    >
-                      {item.remainingQuantityKg > 0
-                        ? "Available"
-                        : "Out of Stock"}
-                    </Text>
+                  {/* Stock badge (bottom-right of image) */}
+                  <View style={styles.stockBadge}>
+                    <Text style={styles.stockText}>{item.quantityKg} kg</Text>
                   </View>
                 </View>
-              </View>
-              <View
-                style={{
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <TouchableOpacity
-                  onPress={(e) => {
-                    e.stopPropagation(); // ✅ Prevents click propagation to detail nav
-                    setEditProduct(item);
-                    setShowModal(true);
-                  }}
-                >
-                  <Ionicons name="create-outline" size={24} color={colors.primary} />
-                  <Text style={[{ paddingBottom: 25 }, { color: colors.text }]}>
-                    Edit
-                  </Text>
-                </TouchableOpacity>
 
-                <TouchableOpacity
-                  onPress={(e) => {
-                    e.stopPropagation(); // ✅ Prevents click propagation to detail nav
-                    handleDelete(item.id);
+                {/* Content section */}
+                <View style={styles.cardContent}>
+                  <Text
+                    style={[styles.cardTitle, { color: colors.text }]}
+                    numberOfLines={2}
+                  >
+                    {item.name}
+                  </Text>
+                  <Text
+                    style={[styles.cardDesc, { color: colors.textSecondary }]}
+                    numberOfLines={2}
+                  >
+                    {item.description}
+                  </Text>
+
+                  <View style={styles.priceContainer}>
+                    <Text style={[styles.cardPrice, { color: colors.primary }]}>
+                      ₹ {item.pricePerKg} /kg
+                    </Text>
+                  </View>
+
+                  <View style={styles.statusContainer}>
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        item.remainingQuantityKg > 0
+                          ? styles.availableBadge
+                          : styles.outOfStockBadge,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.statusText,
+                          item.remainingQuantityKg > 0
+                            ? styles.availableText
+                            : styles.outOfStockText,
+                        ]}
+                      >
+                        {item.remainingQuantityKg > 0
+                          ? "Available"
+                          : "Out of Stock"}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <View
+                  style={{
+                    justifyContent: "space-between",
+                    alignItems: "center",
                   }}
                 >
-                  <Ionicons name="trash-outline" size={24} color="red" />
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={(e) => {
+                      e.stopPropagation(); // ✅ Prevents click propagation to detail nav
+                      setEditProduct(item);
+                      setShowModal(true);
+                    }}
+                  >
+                    <Ionicons
+                      name="create-outline"
+                      size={24}
+                      color={colors.primary}
+                    />
+                    <Text
+                      style={[{ paddingBottom: 25 }, { color: colors.text }]}
+                    >
+                      Edit
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={(e) => {
+                      e.stopPropagation(); // ✅ Prevents click propagation to detail nav
+                      handleDelete(item.id);
+                    }}
+                  >
+                    <Ionicons name="trash-outline" size={24} color="red" />
+                  </TouchableOpacity>
+                </View>
               </View>
-            </AnimatedCard>
             </TouchableOpacity>
           )}
         />
@@ -262,11 +289,6 @@ const styles = StyleSheet.create({
   cardContainer: {
     marginHorizontal: 16,
     marginVertical: 8,
-  },
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 12,
   },
   cardContent: { flex: 1, marginLeft: 12 },
   cardTitle: {

@@ -10,12 +10,14 @@ import {
   ScrollView,
   Alert,
   SafeAreaView,
+  StatusBar,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useAuth } from "../context/AuthContext";
-import AnimatedCard from "../components/ui/AnimatedCard";
+
 import { useDarkMode } from "../context/DarkModeContext";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function SignInScreen() {
   const { colors } = useDarkMode();
@@ -24,7 +26,8 @@ export default function SignInScreen() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState("");
-
+  const STATUS_BAR_HEIGHT =
+    Platform.OS === "android" ? StatusBar.currentHeight || 24 : 0;
   const handleSignIn = async () => {
     if (!userName || !password) {
       Alert.alert("Validation", "Please enter both username and password.");
@@ -39,9 +42,26 @@ export default function SignInScreen() {
       setTimeout(() => setLocalError(""), 3000);
     }
   };
-
+  const dynamicStyles = StyleSheet.create({
+    formCard: {
+      marginBottom: 30,
+      borderRadius: 8,
+      padding: 20,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 2,
+      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+    },
+  });
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <LinearGradient
+      colors={colors.loginBackground}
+      style={[styles.container, { paddingTop: STATUS_BAR_HEIGHT }]}
+    >
+      <StatusBar translucent barStyle="light-content" />
+
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -54,10 +74,8 @@ export default function SignInScreen() {
           >
             {/* Header */}
             <View style={styles.header}>
-              <Text style={[styles.title, { color: colors.text }]}>
-                Welcome Back 👋
-              </Text>
-              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              <Text style={styles.title}>Welcome Back 👋</Text>
+              <Text style={styles.subtitle}>
                 Sign in to continue your journey
               </Text>
             </View>
@@ -68,13 +86,11 @@ export default function SignInScreen() {
             )}
 
             {/* Form */}
-            <AnimatedCard delay={1} style={styles.formCard}>
+            <View style={dynamicStyles.formCard}>
               <View style={styles.form}>
                 {/* Username Input */}
                 <View style={styles.inputContainer}>
-                  <Text style={[styles.inputLabel, { color: colors.text }]}>
-                    Username
-                  </Text>
+                  <Text style={styles.inputLabel}>Username</Text>
                   <View
                     style={[
                       styles.inputWrapper,
@@ -101,12 +117,9 @@ export default function SignInScreen() {
                     />
                   </View>
                 </View>
-
                 {/* Password Input */}
                 <View style={styles.inputContainer}>
-                  <Text style={[styles.inputLabel, { color: colors.text }]}>
-                    Password
-                  </Text>
+                  <Text style={styles.inputLabel}>Password</Text>
                   <View
                     style={[
                       styles.inputWrapper,
@@ -147,7 +160,9 @@ export default function SignInScreen() {
                 {/* Forgot Password */}
                 <View style={styles.forgotContainer}>
                   <TouchableOpacity>
-                    <Text style={[styles.forgotText, { color: colors.primary }]}>
+                    <Text
+                      style={[styles.forgotText, { color: colors.primary }]}
+                    >
                       Forgot Password?
                     </Text>
                   </TouchableOpacity>
@@ -164,7 +179,9 @@ export default function SignInScreen() {
                     onPress={handleSignIn}
                     disabled={loading}
                   >
-                    <Text style={[styles.buttonText, { color: colors.surface }]}>
+                    <Text
+                      style={[styles.buttonText, { color: colors.surface }]}
+                    >
                       {loading ? "Signing In..." : "Sign In"}
                     </Text>
                   </TouchableOpacity>
@@ -172,21 +189,23 @@ export default function SignInScreen() {
 
                 {/* Sign Up Link */}
                 <View style={styles.signUpContainer}>
-                  <Text style={[styles.signUpText, { color: colors.textSecondary }]}>
-                    Don't have an account?{" "}
-                  </Text>
-                  <TouchableOpacity onPress={() => router.push("/(auth)/sign-up")}>
-                    <Text style={[styles.signUpLink, { color: colors.primary }]}>
+                  <Text style={styles.signUpText}>Don't have an account? </Text>
+                  <TouchableOpacity
+                    onPress={() => router.push("/(auth)/sign-up")}
+                  >
+                    <Text
+                      style={[styles.signUpLink, { color: colors.primary }]}
+                    >
                       Sign Up
                     </Text>
                   </TouchableOpacity>
                 </View>
               </View>
-            </AnimatedCard>
+            </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
-    </View>
+    </LinearGradient>
   );
 }
 
@@ -197,8 +216,8 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 20,
-    paddingTop: 80,
-    paddingBottom: 40,
+    paddingTop: "40%",
+    // paddingBottom: 40,
   },
   header: { marginBottom: 40 },
   title: {
@@ -206,11 +225,13 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginBottom: 8,
     textAlign: "center",
+    color: "#FFFFFF",
   },
   subtitle: {
     fontSize: 16,
     fontWeight: "500",
     textAlign: "center",
+    color: "#FFFFFF",
   },
   errorMessage: {
     color: "red",
@@ -218,14 +239,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     fontSize: 14,
   },
-  formCard: {
-    marginBottom: 30,
-  },
+
   form: { gap: 20 },
   inputContainer: { gap: 8 },
   inputLabel: {
     fontSize: 14,
     fontWeight: "600",
+    color: "#FFFFFF",
   },
   inputWrapper: {
     flexDirection: "row",
@@ -269,6 +289,7 @@ const styles = StyleSheet.create({
   signUpText: {
     fontSize: 16,
     fontWeight: "500",
+    color: "#FFFFFF",
   },
   signUpLink: {
     fontSize: 16,

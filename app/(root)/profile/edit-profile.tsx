@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import AnimatedCard from "@/app/components/ui/AnimatedCard";
+
 
 export default function EditProfile() {
   const [name, setName] = useState("");
@@ -36,7 +36,7 @@ export default function EditProfile() {
         <Text style={styles.title}>Edit Profile</Text>
       </View>
 
-      <AnimatedCard style={styles.formCard}>
+      <View style={styles.formCard}>
         {/* Name Input */}
         <Text style={styles.label}>Name</Text>
         <TextInput
@@ -64,7 +64,7 @@ export default function EditProfile() {
             Save
           </Text>
         </TouchableOpacity>
-      </AnimatedCard>
+      </View>
     </View>
   );
 }

@@ -16,7 +16,7 @@ import {
 } from "@/api/services";
 import { useApi } from "@/hooks/useApi";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
-import AnimatedCard from "@/app/components/ui/AnimatedCard";
+
 import { router } from "expo-router";
 import { useDispatch } from "react-redux";
 import { clearBadge } from "@/store/badgeSlice";
@@ -99,7 +99,21 @@ export default function SalesScreen() {
       },
     });
   };
+  const dynamicStyles = StyleSheet.create({
+    requestCard: {
+      padding: 16,
+      marginHorizontal: 8,
+      marginVertical: 8,
+      backgroundColor: colors.surface,
+      borderRadius: 8,
+      elevation: 2,
+      shadowColor: "#000",
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      
+    },
 
+  });
   const renderHeader = () => (
     <View style={[styles.header, { backgroundColor: colors.headerBackground }]}>
       <SafeAreaView>
@@ -140,7 +154,7 @@ export default function SalesScreen() {
         onPress={() => handleViewSalesDetails(item)}
         activeOpacity={0.9}
       >
-        <AnimatedCard style={styles.requestCard}>
+        <View style={dynamicStyles.requestCard}>
           <View style={styles.requestHeader}>
             <View style={styles.productInfo}>
               <Text style={[styles.productName, { color: colors.text }]}>
@@ -244,7 +258,7 @@ export default function SalesScreen() {
               </TouchableOpacity>
             </View>
           )}
-        </AnimatedCard>
+        </View>
       </TouchableOpacity>
     );
   };
@@ -292,7 +306,7 @@ export default function SalesScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         ListEmptyComponent={
-          <AnimatedCard style={styles.emptyCard}>
+          <View style={styles.emptyCard}>
             <View style={styles.emptyContent}>
               <Ionicons name="receipt-outline" size={48} color="#9CA3AF" />
               <Text style={[styles.emptyTitle, { color: colors.text }]}>
@@ -302,7 +316,7 @@ export default function SalesScreen() {
                 When buyers request your products, they'll appear here
               </Text>
             </View>
-          </AnimatedCard>
+          </View>
         }
       />
     </View>
@@ -348,10 +362,7 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: 100,
   },
-  requestCard: {
-    marginHorizontal: 16,
-    marginVertical: 8,
-  },
+ 
   requestHeader: {
     flexDirection: "row",
     justifyContent: "space-between",

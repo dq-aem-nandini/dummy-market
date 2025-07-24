@@ -26,7 +26,7 @@ import {
   markNotificationAsClearedAll,
 } from "@/api/services";
 import { useDarkMode } from "@/app/context/DarkModeContext";
-import AnimatedCard from "@/app/components/ui/AnimatedCard";
+
 
 export default function NotificationsScreen() {
   const { colors } = useDarkMode();
@@ -122,7 +122,23 @@ export default function NotificationsScreen() {
     };
     return getTime(b) - getTime(a);
   });
-
+  const dynamicStyles = StyleSheet.create({
+    menuCard: {
+      marginBottom: 12,
+        marginHorizontal: 16,
+        flexDirection: "row",
+        alignItems: "center",
+        padding: 12,
+        backgroundColor: colors.surface,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 2,
+        borderRadius: 12,
+        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+      },
+  })
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View
@@ -179,7 +195,7 @@ export default function NotificationsScreen() {
             let message = item.description;
             const backendStatus = (item.description || "").toLowerCase();
             const product = r?.productName || "product";
-            const requestId = r?.id ? `(Request ID: #${r.id})` : "";
+
 
             if (
               !message ||
@@ -197,7 +213,7 @@ export default function NotificationsScreen() {
             }
 
             return (
-              <AnimatedCard style={styles.card}>
+              <View style={dynamicStyles.menuCard}>
                 <View style={styles.row}>
                   <MaterialIcons
                     name={iconName}
@@ -236,7 +252,7 @@ export default function NotificationsScreen() {
                     />
                   </TouchableOpacity>
                 </View>
-              </AnimatedCard>
+              </View>
             );
           }}
         />
@@ -262,10 +278,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   headerTitle: { fontSize: 20, fontWeight: "bold" },
-  card: {
-    marginBottom: 12,
-    marginHorizontal: 16,
-  },
+ 
   row: { flexDirection: "row", alignItems: "center" },
   title: { fontSize: 16, fontWeight: "600" },
   time: { fontSize: 12, marginTop: 4 },

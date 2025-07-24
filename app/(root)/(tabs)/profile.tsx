@@ -72,12 +72,14 @@ export default function ProfileScreen() {
   const dynamicStyles = StyleSheet.create({
     container: {
       flex: 1,
+     
     },
     content: {
       flex: 1,
+     
     },
     scrollContent: {
-      paddingBottom: 100,
+      paddingBottom: 20,
     },
     header: {
       paddingBottom: 20,
@@ -145,12 +147,12 @@ export default function ProfileScreen() {
     },
     section: {
       marginHorizontal: 16,
-      marginBottom: 24,
+      // marginBottom: 24,
     },
     sectionTitle: {
       fontSize: 18,
       fontWeight: "600",
-      color: colors.textPrimary,
+      color: colors.text,
       marginBottom: 12,
     },
     menuCard: {
@@ -509,7 +511,7 @@ export default function ProfileScreen() {
   ];
 
   return (
-    <View style={dynamicStyles.container}>
+    <View style={[dynamicStyles.container, { backgroundColor: colors.background }]}>
       <ScrollView
         style={dynamicStyles.content}
         contentContainerStyle={dynamicStyles.scrollContent}
